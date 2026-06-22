@@ -131,6 +131,8 @@ function formatDate(value) {
 function statusBucket(issue) {
   const status = issue.status.toLowerCase();
   const category = issue.statusCategory.toLowerCase();
+  if (status === "awaiting engineering l3") return "Open";
+  if (status === "l3 in progress") return "In Progress";
   if (category === "done") return "Done";
   if (category === "to do") return "Open";
   if (status.includes("block") || status.includes("hold") || status.includes("waiting")) return "Blocked";

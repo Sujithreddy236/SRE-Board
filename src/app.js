@@ -127,6 +127,43 @@
     return groupCount(fallbackIssues, "status", statusOrder);
   }
 
+  function sreStatusBucket(issue) {
+    const status = String(issue.status || "").toLowerCase();
+    const category = String(issue.statusCategory || "").toLowerCase();
+    if (status === "awaiting engineering l3") return "Open";
+    if (status === "l3 in progress") return "In Progress";
+    if (category === "done") return "Done";
+    if (category === "to do") return "Open";
+    if (status.includes("block") || status.includes("hold") || status.includes("waiting")) return "Blocked";
+    return "In Progress";
+  }
+
+  function snapshotSreMetrics() {
+    const issues = source.sreFilterIssues || [];
+    const statusCounts = { Open: 0, "In Progress": 0, Blocked: 0, Done: 0 };
+    const priorityCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+    issues.forEach((issue) => {
+      statusCounts[sreStatusBucket(issue)] += 1;
+      const priority = priorityCounts[issue.priority] === undefined ? "Medium" : issue.priority;
+      priorityCounts[priority] += 1;
+    });
+    const total = issues.length;
+    const health = total ? Math.round(((total - statusCounts.Blocked) / total) * 100) : 100;
+    const progress = total ? Math.round(((statusCounts.Done + statusCounts["In Progress"] * 0.6) / total) * 100) : 0;
+    return {
+      open: statusCounts.Open,
+      inProgress: statusCounts["In Progress"],
+      blocked: statusCounts.Blocked,
+      completed: statusCounts.Done,
+      health,
+      sla: 100,
+      progress,
+      statusCounts,
+      priorityCounts,
+      total
+    };
+  }
+
   function getPriorityCounts(team, fallbackIssues) {
     const counts = team.metrics?.priorityCounts;
     if (counts) {
@@ -143,6 +180,9 @@
 
   function render() {
     const team = getTeam();
+    if (team.id === "sre" && liveStatus.mode !== "live") {
+      team.metrics = { ...team.metrics, ...snapshotSreMetrics() };
+    }
     const allTeamIssues = source.issues.filter((issue) => issue.team === team.id);
     const issues = getFilteredIssues();
     const sreTabSource = getSreTabSource();
