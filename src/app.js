@@ -3,6 +3,7 @@
   const app = document.getElementById("app");
   const state = {
     teamId: "sre",
+    tab: "overview",
     status: "All",
     priority: "All",
     query: ""
@@ -30,6 +31,17 @@
       });
   }
 
+  function getSreInProgressIssues() {
+    return source.sreInProgressIssues.filter((issue) => {
+      const query = state.query.trim().toLowerCase();
+      if (!query) return true;
+      return [issue.key, issue.summary, issue.assignee, issue.status, issue.customer]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+  }
+
   function groupCount(items, field, values) {
     return values.map((value) => ({
       value,
@@ -47,6 +59,7 @@
     const team = getTeam();
     const allTeamIssues = source.issues.filter((issue) => issue.team === team.id);
     const issues = getFilteredIssues();
+    const sreInProgress = getSreInProgressIssues();
     const statusCounts = groupCount(allTeamIssues, "status", statusOrder);
     const priorityCounts = groupCount(allTeamIssues, "priority", priorityOrder);
     const rate = completionRate(allTeamIssues);
@@ -133,6 +146,9 @@
             </div>
           </section>
 
+          ${team.id === "sre" ? renderTabs(sreInProgress.length) : ""}
+
+          ${state.tab === "in-progress" && team.id === "sre" ? renderSreInProgress(sreInProgress) : `
           <section class="work-area">
             <div class="filters">
               <label>
@@ -163,6 +179,7 @@
               </table>
             </div>
           </section>
+          `}
         </main>
       </div>
     `;
@@ -201,6 +218,68 @@
     `;
   }
 
+  function renderTabs(inProgressCount) {
+    return `
+      <div class="tabs" role="tablist" aria-label="SRE dashboard tabs">
+        <button class="tab-button ${state.tab === "overview" ? "active" : ""}" data-tab="overview" role="tab">
+          Overview
+        </button>
+        <button class="tab-button ${state.tab === "in-progress" ? "active" : ""}" data-tab="in-progress" role="tab">
+          In Progress <span>${inProgressCount}</span>
+        </button>
+      </div>
+    `;
+  }
+
+  function renderSreInProgress(issues) {
+    const filter = source.jiraFilters.sreInProgress;
+    return `
+      <section class="work-area">
+        <div class="jira-strip">
+          <div>
+            <strong>Jira filter ${filter.filterId}</strong>
+            <p>${filter.jql}</p>
+          </div>
+          <a href="${filter.sourceUrl}" target="_blank" rel="noreferrer">Open in Jira</a>
+        </div>
+        <div class="filters single-filter">
+          <label>
+            <span>Search</span>
+            <input id="searchInput" value="${escapeHtml(state.query)}" placeholder="Jira Id, customer, assignee" />
+          </label>
+        </div>
+        <div class="table-shell">
+          <table class="sre-progress-table">
+            <thead>
+              <tr>
+                <th>Jira Id</th>
+                <th>Summary</th>
+                <th>Assignee</th>
+                <th>Status</th>
+                <th>Customer</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${issues.map(sreProgressRow).join("") || `<tr><td colspan="5" class="empty">No matching in-progress issues</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function sreProgressRow(issue) {
+    return `
+      <tr>
+        <td><a class="jira-link" href="${issue.url}" target="_blank" rel="noreferrer">${issue.key}</a></td>
+        <td>${escapeHtml(issue.summary)}</td>
+        <td>${escapeHtml(issue.assignee)}</td>
+        <td><span class="pill status-in-progress">${escapeHtml(issue.status)}</span></td>
+        <td>${escapeHtml(issue.customer)}</td>
+      </tr>
+    `;
+  }
+
   function issueRow(issue) {
     return `
       <tr>
@@ -225,6 +304,7 @@
     document.querySelectorAll("[data-team]").forEach((button) => {
       button.addEventListener("click", () => {
         state.teamId = button.dataset.team;
+        state.tab = "overview";
         state.status = "All";
         state.priority = "All";
         state.query = "";
@@ -232,17 +312,25 @@
       });
     });
 
-    document.getElementById("searchInput").addEventListener("input", (event) => {
+    document.querySelectorAll("[data-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.tab = button.dataset.tab;
+        state.query = "";
+        render();
+      });
+    });
+
+    document.getElementById("searchInput")?.addEventListener("input", (event) => {
       state.query = event.target.value;
       render();
     });
 
-    document.getElementById("statusFilter").addEventListener("change", (event) => {
+    document.getElementById("statusFilter")?.addEventListener("change", (event) => {
       state.status = event.target.value;
       render();
     });
 
-    document.getElementById("priorityFilter").addEventListener("change", (event) => {
+    document.getElementById("priorityFilter")?.addEventListener("change", (event) => {
       state.priority = event.target.value;
       render();
     });

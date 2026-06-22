@@ -14,6 +14,7 @@ Open `index.html` in a browser.
 - Summary metrics, status breakdowns, priority views, and issue tables
 - Search and filtering by status and priority
 - Data model designed for Jira issue ingestion
+- SRE `In Progress` tab sourced from Jira filter `52237`
 
 ## Jira Integration Plan
 
@@ -35,3 +36,19 @@ The dashboard currently reads from `src/data.js`. A future Jira connector can ma
 ```
 
 When you provide requirements for each team, the board can be updated with the exact Jira projects, JQL filters, fields, and metrics.
+
+## SRE In Progress
+
+The first SRE tab uses:
+
+```jql
+filter = 52237 AND statusCategory = "In Progress" ORDER BY updated DESC
+```
+
+Columns:
+
+- Jira Id
+- Summary
+- Assignee
+- Status
+- Customer

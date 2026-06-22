@@ -356,11 +356,79 @@ button {
   gap: 14px;
 }
 
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab-button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  color: #304155;
+  display: inline-flex;
+  font-weight: 800;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.tab-button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.tab-button span {
+  background: rgba(23, 32, 43, 0.1);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.tab-button.active span {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.jira-strip {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.jira-strip p {
+  color: #617085;
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.jira-strip a,
+.jira-link {
+  color: #075985;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.jira-strip a:hover,
+.jira-link:hover {
+  text-decoration: underline;
+}
+
 .filters {
   align-items: end;
   display: grid;
   gap: 12px;
   grid-template-columns: minmax(220px, 1fr) 180px 180px;
+}
+
+.single-filter {
+  grid-template-columns: minmax(220px, 460px);
 }
 
 .filters label {
@@ -392,6 +460,10 @@ table {
   border-collapse: collapse;
   min-width: 920px;
   width: 100%;
+}
+
+.sre-progress-table {
+  min-width: 760px;
 }
 
 th,

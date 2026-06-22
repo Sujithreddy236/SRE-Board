@@ -61,6 +61,26 @@ window.SRE_BOARD_DATA = {
       }
     }
   ],
+  jiraFilters: {
+    sreInProgress: {
+      cloudUrl: "https://wdtablesystems.atlassian.net",
+      filterId: "52237",
+      jql: "filter = 52237 AND statusCategory = \"In Progress\" ORDER BY updated DESC",
+      sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=52237"
+    }
+  },
+  sreInProgressIssues: [
+    { key: "PPSUPPORT-4165", summary: "INC0704495 storage chip issue", assignee: "Sharad Goel", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4165" },
+    { key: "PPSUPPORT-4097", summary: "Rejected Buyin - Cannot deserialize value of type PatronSessionEntity", assignee: "Sharad Goel", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4097" },
+    { key: "PPSUPPORT-3202", summary: "Perfect cage - One piece of NN20 $10, 000 chip was shown invalid chip", assignee: "Amol Bhaskar Gite", status: "L3 in progress", customer: "Wynn Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3202" },
+    { key: "PPSUPPORT-3432", summary: "PP Data Issue: casino_player_id in t_session & t_player mismatch", assignee: "Onkar Surendra Anvekar", status: "L3 in progress", customer: "MGM Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3432" },
+    { key: "PPSUPPORT-4065", summary: "Perfect Pay Variance (12/06/2026 & MPMB601)", assignee: "Rahul Sharma", status: "Awaiting engineering L3", customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4065" },
+    { key: "PPSUPPORT-4151", summary: "INC0704503 player session report cannot run", assignee: "Mohammad Shadab", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4151" },
+    { key: "PPSUPPORT-3932", summary: "Melco Macau | Pit889 changing the Template and Business Rules Rating", assignee: "Amarnath Kumar", status: "L3 in progress", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3932" },
+    { key: "PPSUPPORT-4129", summary: "Fill FL0011261050 sent twice to customer side", assignee: "Vansh Sharma", status: "L3 in progress", customer: "Galaxy", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4129" },
+    { key: "PPSUPPORT-4170", summary: "CVE-2022-22965 Spring4Shell Exploit Attempt on worker2 (rwppprdwrk02)", assignee: "Mayank Singh", status: "Awaiting engineering L3", customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4170" },
+    { key: "PPSUPPORT-4115", summary: "WDTS DB Alert - WRK1 is down & WRK5 out of sync", assignee: "Mohammad Shadab", status: "Awaiting engineering L3", customer: "Starworld", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4115" }
+  ],
   issues: [
     { key: "SRE-101", team: "sre", type: "Incident", summary: "Reduce alert noise for payment gateway", status: "In Progress", priority: "High", owner: "Priya", due: "2026-06-28", progress: 64, updated: "2026-06-21" },
     { key: "SRE-118", team: "sre", type: "Task", summary: "Automate weekly availability report", status: "Open", priority: "Medium", owner: "Rahul", due: "2026-07-03", progress: 24, updated: "2026-06-19" },
