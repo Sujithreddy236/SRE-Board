@@ -173,7 +173,7 @@ function computeMetrics(issues) {
 }
 
 async function handleSreApi(res) {
-  if (!jiraEmail || !jiraToken) {
+  if (!jiraEmail || !jiraToken || jiraToken === "replace-with-your-atlassian-api-token") {
     send(res, 503, JSON.stringify({
       error: "Jira credentials are not configured.",
       requiredEnv: ["JIRA_EMAIL", "JIRA_API_TOKEN"]
