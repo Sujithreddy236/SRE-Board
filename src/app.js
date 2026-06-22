@@ -1,6 +1,11 @@
 (function () {
   const source = window.SRE_BOARD_DATA;
   const app = document.getElementById("app");
+  let liveStatus = {
+    mode: "snapshot",
+    message: "Snapshot data active",
+    fetchedAt: ""
+  };
   const state = {
     teamId: "sre",
     tab: "overview",
@@ -16,6 +21,52 @@
 
   function getTeam() {
     return source.teams.find((team) => team.id === state.teamId) || source.teams[0];
+  }
+
+  function applyLiveSreData(payload) {
+    if (!payload || !Array.isArray(payload.sreFilterIssues)) return;
+    source.sreFilterIssues = payload.sreFilterIssues;
+    source.sreL3Issues = payload.sreL3Issues || payload.sreFilterIssues.filter((issue) => issue.status === "L3 in progress");
+    source.jiraFilters = { ...source.jiraFilters, ...payload.jiraFilters };
+    const sreTeam = source.teams.find((team) => team.id === "sre");
+    if (sreTeam && payload.metrics) {
+      sreTeam.metrics = {
+        ...sreTeam.metrics,
+        open: payload.metrics.open,
+        inProgress: payload.metrics.inProgress,
+        blocked: payload.metrics.blocked,
+        completed: payload.metrics.completed,
+        health: payload.metrics.health,
+        sla: payload.metrics.sla,
+        progress: payload.metrics.progress,
+        statusCounts: payload.metrics.statusCounts,
+        priorityCounts: payload.metrics.priorityCounts,
+        total: payload.metrics.total
+      };
+    }
+  }
+
+  async function refreshLiveData() {
+    liveStatus = { mode: "loading", message: "Refreshing Jira data", fetchedAt: liveStatus.fetchedAt };
+    render();
+    try {
+      const response = await fetch("/api/sre", { cache: "no-store" });
+      if (!response.ok) throw new Error(`Jira API unavailable (${response.status})`);
+      const payload = await response.json();
+      applyLiveSreData(payload);
+      liveStatus = {
+        mode: "live",
+        message: "Live Jira data",
+        fetchedAt: payload.fetchedAt || new Date().toISOString()
+      };
+    } catch (error) {
+      liveStatus = {
+        mode: "snapshot",
+        message: `${error.message}; using snapshot`,
+        fetchedAt: ""
+      };
+    }
+    render();
   }
 
   function getFilteredIssues() {
@@ -34,8 +85,7 @@
   }
 
   function getSreIssues() {
-    return source.sreFilterIssues
-      .filter((issue) => state.tab !== "in-progress" || issue.status === "L3 in progress")
+    return getSreTabSource()
       .filter((issue) => state.assignee === "All" || issue.assignee === state.assignee)
       .filter((issue) => {
       const query = state.query.trim().toLowerCase();
@@ -45,6 +95,13 @@
         .toLowerCase()
         .includes(query);
       });
+  }
+
+  function getSreTabSource() {
+    if (state.tab === "in-progress") {
+      return source.sreL3Issues || source.sreFilterIssues.filter((issue) => issue.status === "L3 in progress");
+    }
+    return source.sreFilterIssues;
   }
 
   function getAssignees(items) {
@@ -58,6 +115,26 @@
     }));
   }
 
+  function metricValue(team, name, fallback) {
+    return team.metrics?.[name] ?? fallback;
+  }
+
+  function getStatusCounts(team, fallbackIssues) {
+    const counts = team.metrics?.statusCounts;
+    if (counts) {
+      return statusOrder.map((value) => ({ value, count: counts[value] || 0 }));
+    }
+    return groupCount(fallbackIssues, "status", statusOrder);
+  }
+
+  function getPriorityCounts(team, fallbackIssues) {
+    const counts = team.metrics?.priorityCounts;
+    if (counts) {
+      return priorityOrder.map((value) => ({ value, count: counts[value] || 0 }));
+    }
+    return groupCount(fallbackIssues, "priority", priorityOrder);
+  }
+
   function completionRate(items) {
     if (!items.length) return 0;
     const total = items.reduce((sum, issue) => sum + issue.progress, 0);
@@ -68,12 +145,13 @@
     const team = getTeam();
     const allTeamIssues = source.issues.filter((issue) => issue.team === team.id);
     const issues = getFilteredIssues();
-    const sreTabSource = source.sreFilterIssues.filter((issue) => state.tab !== "in-progress" || issue.status === "L3 in progress");
+    const sreTabSource = getSreTabSource();
     const sreIssues = getSreIssues();
-    const sreInProgressCount = source.sreFilterIssues.filter((issue) => issue.status === "L3 in progress").length;
-    const statusCounts = groupCount(allTeamIssues, "status", statusOrder);
-    const priorityCounts = groupCount(allTeamIssues, "priority", priorityOrder);
-    const rate = completionRate(allTeamIssues);
+    const sreInProgressCount = (source.sreL3Issues || source.sreFilterIssues.filter((issue) => issue.status === "L3 in progress")).length;
+    const statusCounts = team.id === "sre" ? getStatusCounts(team, allTeamIssues) : groupCount(allTeamIssues, "status", statusOrder);
+    const priorityCounts = team.id === "sre" ? getPriorityCounts(team, allTeamIssues) : groupCount(allTeamIssues, "priority", priorityOrder);
+    const totalIssues = team.id === "sre" ? metricValue(team, "total", source.sreFilterIssues.length) : allTeamIssues.length;
+    const rate = team.id === "sre" ? metricValue(team, "progress", completionRate(allTeamIssues)) : completionRate(allTeamIssues);
 
     app.innerHTML = `
       <div class="shell" style="--accent: ${team.accent}">
@@ -94,10 +172,10 @@
             `).join("")}
           </nav>
           <div class="sync-panel">
-            <span class="sync-indicator"></span>
+            <span class="sync-indicator sync-${liveStatus.mode}"></span>
             <div>
               <strong>Jira Sync</strong>
-              <p>Sample data active</p>
+              <p>${escapeHtml(liveStatus.message)}</p>
             </div>
           </div>
         </aside>
@@ -116,20 +194,20 @@
           </header>
 
           <section class="metrics-grid" aria-label="Summary metrics">
-            ${metricCard("Open", team.metrics.open, "Backlog load")}
-            ${metricCard("In Progress", team.metrics.inProgress, "Active execution")}
-            ${metricCard("Blocked", team.metrics.blocked, "Needs attention")}
-            ${metricCard("Health", `${team.metrics.health}%`, "Service score")}
+            ${metricCard("Open", metricValue(team, "open", 0), "Backlog load")}
+            ${metricCard("In Progress", metricValue(team, "inProgress", 0), "Active execution")}
+            ${metricCard("Blocked", metricValue(team, "blocked", 0), "Needs attention")}
+            ${metricCard("Health", `${metricValue(team, "health", 0)}%`, "Service score")}
           </section>
 
           <section class="insights">
             <div class="panel">
               <div class="panel-heading">
                 <h3>Status</h3>
-                <span>${allTeamIssues.length} issues</span>
+                <span>${totalIssues} issues</span>
               </div>
               <div class="bar-list">
-                ${statusCounts.map((item) => barRow(item.value, item.count, allTeamIssues.length)).join("")}
+                ${statusCounts.map((item) => barRow(item.value, item.count, totalIssues)).join("")}
               </div>
             </div>
             <div class="panel">
@@ -149,10 +227,10 @@
             <div class="panel health-panel">
               <div class="panel-heading">
                 <h3>Delivery</h3>
-                <span>${team.metrics.sla}% SLA</span>
+                <span>${metricValue(team, "sla", 0)}% SLA</span>
               </div>
-              <div class="gauge" style="--score:${team.metrics.health * 3.6}deg">
-                <div>${team.metrics.health}%</div>
+              <div class="gauge" style="--score:${metricValue(team, "health", 0) * 3.6}deg">
+                <div>${metricValue(team, "health", 0)}%</div>
               </div>
             </div>
           </section>
@@ -447,7 +525,7 @@
       render();
     });
 
-    document.getElementById("refreshButton").addEventListener("click", () => render());
+    document.getElementById("refreshButton").addEventListener("click", () => refreshLiveData());
     document.getElementById("exportButton").addEventListener("click", exportJson);
   }
 
@@ -481,4 +559,5 @@
   }
 
   render();
+  refreshLiveData();
 })();

@@ -1,3 +1,7 @@
 .agents/
 .codex/
-
+.env
+node_modules/
+server.log
+server.err.log
+server-job.log

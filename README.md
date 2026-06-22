@@ -4,16 +4,37 @@ A dynamic team dashboard for SRE, Architecture, R&D, and AI project tracking.
 
 The initial version is a zero-dependency web app with sample data and a Jira-ready data shape. It can be opened directly in a browser and later connected to Jira once team-specific fields, filters, and reporting rules are provided.
 
-## Run
+## Run Snapshot
 
 Open `index.html` in a browser.
+
+## Run With Live Jira Data
+
+Create `.env` from `.env.example`, then set:
+
+- `JIRA_EMAIL`
+- `JIRA_API_TOKEN`
+
+Start the local API and dashboard:
+
+```powershell
+node server.js
+```
+
+Open:
+
+```text
+http://localhost:4173
+```
+
+The dashboard calls `/api/sre` for live Jira data and falls back to the checked-in snapshot if credentials are not configured.
 
 ## Current Scope
 
 - Team-specific dashboards for SRE, Architecture, R&D, and AI Projects
 - Summary metrics, status breakdowns, priority views, and issue tables
 - Search and filtering by status and priority
-- Data model designed for Jira issue ingestion
+- Live Jira ingestion through `server.js`
 - SRE `Overview` and `In Progress` tabs sourced from Jira filter `52237`
 
 ## Jira Integration Plan
