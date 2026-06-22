@@ -6,6 +6,7 @@
     tab: "overview",
     status: "All",
     priority: "All",
+    assignee: "All",
     query: ""
   };
 
@@ -31,15 +32,22 @@
       });
   }
 
-  function getSreInProgressIssues() {
-    return source.sreInProgressIssues.filter((issue) => {
+  function getSreIssues() {
+    return source.sreFilterIssues
+      .filter((issue) => state.tab !== "in-progress" || issue.status === "L3 in progress")
+      .filter((issue) => state.assignee === "All" || issue.assignee === state.assignee)
+      .filter((issue) => {
       const query = state.query.trim().toLowerCase();
       if (!query) return true;
       return [issue.key, issue.summary, issue.assignee, issue.status, issue.customer]
         .join(" ")
         .toLowerCase()
         .includes(query);
-    });
+      });
+  }
+
+  function getAssignees(items) {
+    return [...new Set(items.map((issue) => issue.assignee).filter(Boolean))].sort();
   }
 
   function groupCount(items, field, values) {
@@ -59,7 +67,9 @@
     const team = getTeam();
     const allTeamIssues = source.issues.filter((issue) => issue.team === team.id);
     const issues = getFilteredIssues();
-    const sreInProgress = getSreInProgressIssues();
+    const sreTabSource = source.sreFilterIssues.filter((issue) => state.tab !== "in-progress" || issue.status === "L3 in progress");
+    const sreIssues = getSreIssues();
+    const sreInProgressCount = source.sreFilterIssues.filter((issue) => issue.status === "L3 in progress").length;
     const statusCounts = groupCount(allTeamIssues, "status", statusOrder);
     const priorityCounts = groupCount(allTeamIssues, "priority", priorityOrder);
     const rate = completionRate(allTeamIssues);
@@ -146,9 +156,9 @@
             </div>
           </section>
 
-          ${team.id === "sre" ? renderTabs(sreInProgress.length) : ""}
+          ${team.id === "sre" ? renderTabs(sreInProgressCount) : ""}
 
-          ${state.tab === "in-progress" && team.id === "sre" ? renderSreInProgress(sreInProgress) : `
+          ${team.id === "sre" ? renderSreJiraTab(sreIssues, getAssignees(sreTabSource), sreTabSource) : `
           <section class="work-area">
             <div class="filters">
               <label>
@@ -231,14 +241,18 @@
     `;
   }
 
-  function renderSreInProgress(issues) {
+  function renderSreJiraTab(issues, assignees, tabIssues) {
     const filter = source.jiraFilters.sreInProgress;
+    const title = state.tab === "in-progress" ? "L3 in progress" : `Jira filter ${filter.filterId}`;
+    const jql = state.tab === "in-progress"
+      ? `filter = ${filter.filterId} AND status = "L3 in progress" ORDER BY updated DESC`
+      : `filter = ${filter.filterId} ORDER BY updated DESC`;
     return `
       <section class="work-area">
         <div class="jira-strip">
           <div>
-            <strong>Jira filter ${filter.filterId}</strong>
-            <p>${filter.jql}</p>
+            <strong>${title}</strong>
+            <p>${jql}</p>
           </div>
           <a href="${filter.sourceUrl}" target="_blank" rel="noreferrer">Open in Jira</a>
         </div>
@@ -248,6 +262,7 @@
             <input id="searchInput" value="${escapeHtml(state.query)}" placeholder="Jira Id, customer, assignee" />
           </label>
         </div>
+        ${renderAssigneeChips(assignees, tabIssues)}
         <div class="table-shell">
           <table class="sre-progress-table">
             <thead>
@@ -260,11 +275,26 @@
               </tr>
             </thead>
             <tbody>
-              ${issues.map(sreProgressRow).join("") || `<tr><td colspan="5" class="empty">No matching in-progress issues</td></tr>`}
+              ${issues.map(sreProgressRow).join("") || `<tr><td colspan="5" class="empty">No matching Jira issues</td></tr>`}
             </tbody>
           </table>
         </div>
       </section>
+    `;
+  }
+
+  function renderAssigneeChips(assignees, visibleScope) {
+    return `
+      <div class="assignee-strip" aria-label="Assignee filters">
+        <button class="assignee-chip ${state.assignee === "All" ? "active" : ""}" data-assignee="All">
+          All <span>${visibleScope.length}</span>
+        </button>
+        ${assignees.map((assignee) => `
+          <button class="assignee-chip ${state.assignee === assignee ? "active" : ""}" data-assignee="${escapeHtml(assignee)}">
+            ${escapeHtml(assignee)} <span>${visibleScope.filter((issue) => issue.assignee === assignee).length}</span>
+          </button>
+        `).join("")}
+      </div>
     `;
   }
 
@@ -307,6 +337,7 @@
         state.tab = "overview";
         state.status = "All";
         state.priority = "All";
+        state.assignee = "All";
         state.query = "";
         render();
       });
@@ -315,7 +346,15 @@
     document.querySelectorAll("[data-tab]").forEach((button) => {
       button.addEventListener("click", () => {
         state.tab = button.dataset.tab;
+        state.assignee = "All";
         state.query = "";
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-assignee]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.assignee = button.dataset.assignee;
         render();
       });
     });

@@ -431,6 +431,42 @@ button {
   grid-template-columns: minmax(220px, 460px);
 }
 
+.assignee-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.assignee-chip {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d6dee8;
+  border-radius: 999px;
+  color: #304155;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.assignee-chip.active {
+  background: #17202b;
+  border-color: #17202b;
+  color: #fff;
+}
+
+.assignee-chip span {
+  background: rgba(23, 32, 43, 0.1);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.assignee-chip.active span {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .filters label {
   display: grid;
   gap: 6px;

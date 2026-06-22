@@ -65,15 +65,16 @@ window.SRE_BOARD_DATA = {
     sreInProgress: {
       cloudUrl: "https://wdtablesystems.atlassian.net",
       filterId: "52237",
-      jql: "filter = 52237 AND statusCategory = \"In Progress\" ORDER BY updated DESC",
+      jql: "filter = 52237 ORDER BY updated DESC",
+      inProgressJql: "filter = 52237 AND status = \"L3 in progress\" ORDER BY updated DESC",
       sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=52237"
     }
   },
-  sreInProgressIssues: [
-    { key: "PPSUPPORT-4165", summary: "INC0704495 storage chip issue", assignee: "Sharad Goel", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4165" },
-    { key: "PPSUPPORT-4097", summary: "Rejected Buyin - Cannot deserialize value of type PatronSessionEntity", assignee: "Sharad Goel", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4097" },
+  sreFilterIssues: [
+    { key: "PPSUPPORT-4097", summary: "Rejected Buyin - Cannot deserialize value of type PatronSessionEntity", assignee: "Filipe Ferreira", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4097" },
+    { key: "PPSUPPORT-4165", summary: "INC0704495 storage chip issue", assignee: "Daniel Vilar", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4165" },
     { key: "PPSUPPORT-3202", summary: "Perfect cage - One piece of NN20 $10, 000 chip was shown invalid chip", assignee: "Amol Bhaskar Gite", status: "L3 in progress", customer: "Wynn Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3202" },
-    { key: "PPSUPPORT-3432", summary: "PP Data Issue: casino_player_id in t_session & t_player mismatch", assignee: "Onkar Surendra Anvekar", status: "L3 in progress", customer: "MGM Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3432" },
+    { key: "PPSUPPORT-3432", summary: "PP Data Issue: casino_player_id in t_session & t_player mismatch", assignee: "Rahul Sharma", status: "Awaiting engineering L3", customer: "MGM Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3432" },
     { key: "PPSUPPORT-4065", summary: "Perfect Pay Variance (12/06/2026 & MPMB601)", assignee: "Rahul Sharma", status: "Awaiting engineering L3", customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4065" },
     { key: "PPSUPPORT-4151", summary: "INC0704503 player session report cannot run", assignee: "Mohammad Shadab", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4151" },
     { key: "PPSUPPORT-3932", summary: "Melco Macau | Pit889 changing the Template and Business Rules Rating", assignee: "Amarnath Kumar", status: "L3 in progress", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3932" },
