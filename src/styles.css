@@ -410,8 +410,11 @@ button {
 
 .jira-strip a,
 .jira-link {
+  background: transparent;
+  border: 0;
   color: #075985;
   font-weight: 800;
+  padding: 0;
   text-decoration: none;
 }
 
@@ -500,6 +503,88 @@ table {
 
 .sre-progress-table {
   min-width: 760px;
+}
+
+.selected-row td {
+  background: #f0fdfa;
+}
+
+.issue-button {
+  cursor: pointer;
+}
+
+.comment-panel {
+  background: #fff;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(22, 32, 43, 0.08);
+  padding: 16px;
+}
+
+.comment-heading {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.comment-heading div {
+  display: grid;
+  gap: 4px;
+}
+
+.comment-heading span {
+  color: #617085;
+  font-size: 13px;
+}
+
+.close-comments {
+  background: #f1f5f9;
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  color: #304155;
+  font-weight: 800;
+  min-height: 32px;
+  width: 34px;
+}
+
+.comment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-card {
+  background: #f8fafc;
+  border: 1px solid #e3e9ef;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.comment-card div {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.comment-card span,
+.empty-comments {
+  color: #617085;
+  font-size: 13px;
+}
+
+.comment-card p,
+.empty-comments {
+  margin: 0;
+}
+
+.comment-card p {
+  color: #233044;
+  line-height: 1.5;
+  max-height: 120px;
+  overflow: auto;
 }
 
 th,

@@ -7,6 +7,7 @@
     status: "All",
     priority: "All",
     assignee: "All",
+    selectedIssueKey: "",
     query: ""
   };
 
@@ -279,6 +280,7 @@
             </tbody>
           </table>
         </div>
+        ${renderRecentComments(issues)}
       </section>
     `;
   }
@@ -300,14 +302,60 @@
 
   function sreProgressRow(issue) {
     return `
-      <tr>
-        <td><a class="jira-link" href="${issue.url}" target="_blank" rel="noreferrer">${issue.key}</a></td>
+      <tr class="${state.selectedIssueKey === issue.key ? "selected-row" : ""}">
+        <td>
+          <button class="jira-link issue-button" data-issue-key="${issue.key}" data-issue-url="${issue.url}" title="Single click for comments, double click to open Jira">
+            ${issue.key}
+          </button>
+        </td>
         <td>${escapeHtml(issue.summary)}</td>
         <td>${escapeHtml(issue.assignee)}</td>
         <td><span class="pill status-in-progress">${escapeHtml(issue.status)}</span></td>
         <td>${escapeHtml(issue.customer)}</td>
       </tr>
     `;
+  }
+
+  function renderRecentComments(visibleIssues) {
+    const issue = visibleIssues.find((item) => item.key === state.selectedIssueKey);
+    if (!issue) return "";
+    const comments = (issue.comments || []).slice(0, 2);
+
+    return `
+      <aside class="comment-panel" aria-live="polite">
+        <div class="comment-heading">
+          <div>
+            <strong>${issue.key}</strong>
+            <span>${escapeHtml(issue.summary)}</span>
+          </div>
+          <button class="close-comments" id="closeComments" title="Close comments">x</button>
+        </div>
+        <div class="comment-list">
+          ${comments.length ? comments.map(commentCard).join("") : `<p class="empty-comments">No recent comments captured for this issue yet.</p>`}
+        </div>
+      </aside>
+    `;
+  }
+
+  function commentCard(comment) {
+    return `
+      <article class="comment-card">
+        <div>
+          <strong>${escapeHtml(comment.author)}</strong>
+          <span>${escapeHtml(comment.created)}</span>
+        </div>
+        <p>${escapeHtml(cleanComment(comment.body))}</p>
+      </article>
+    `;
+  }
+
+  function cleanComment(value) {
+    return String(value)
+      .replace(/<custom[^>]*>/g, "")
+      .replace(/<\/custom>/g, "")
+      .replace(/!\[\]\([^)]*\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   function issueRow(issue) {
@@ -331,6 +379,8 @@
   }
 
   function bindEvents() {
+    let issueClickTimer;
+
     document.querySelectorAll("[data-team]").forEach((button) => {
       button.addEventListener("click", () => {
         state.teamId = button.dataset.team;
@@ -338,6 +388,7 @@
         state.status = "All";
         state.priority = "All";
         state.assignee = "All";
+        state.selectedIssueKey = "";
         state.query = "";
         render();
       });
@@ -347,6 +398,7 @@
       button.addEventListener("click", () => {
         state.tab = button.dataset.tab;
         state.assignee = "All";
+        state.selectedIssueKey = "";
         state.query = "";
         render();
       });
@@ -355,8 +407,29 @@
     document.querySelectorAll("[data-assignee]").forEach((button) => {
       button.addEventListener("click", () => {
         state.assignee = button.dataset.assignee;
+        state.selectedIssueKey = "";
         render();
       });
+    });
+
+    document.querySelectorAll("[data-issue-key]").forEach((button) => {
+      button.addEventListener("click", () => {
+        clearTimeout(issueClickTimer);
+        issueClickTimer = setTimeout(() => {
+          state.selectedIssueKey = button.dataset.issueKey;
+          render();
+        }, 220);
+      });
+
+      button.addEventListener("dblclick", () => {
+        clearTimeout(issueClickTimer);
+        window.open(button.dataset.issueUrl, "_blank", "noopener");
+      });
+    });
+
+    document.getElementById("closeComments")?.addEventListener("click", () => {
+      state.selectedIssueKey = "";
+      render();
     });
 
     document.getElementById("searchInput")?.addEventListener("input", (event) => {

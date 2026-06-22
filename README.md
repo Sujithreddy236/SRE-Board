@@ -60,3 +60,8 @@ Columns:
 - Customer
 
 Both tabs include clickable assignee filters below the search bar.
+
+Jira Id interaction:
+
+- Single click shows the latest two captured comments below the table
+- Double click opens the issue in Jira
