@@ -36,6 +36,8 @@ The dashboard calls `/api/sre` for live Jira data and falls back to the checked-
 - Search and filtering by status and priority
 - Live Jira ingestion through `server.js`
 - SRE `Overview` and `In Progress` tabs sourced from Jira filter `52237`
+- SRE summary cards show only Open and In Progress
+- Priority uses Jira-derived P1, P2, P3, and P4 buckets
 
 ## Jira Integration Plan
 

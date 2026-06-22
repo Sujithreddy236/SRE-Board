@@ -142,12 +142,12 @@ function statusBucket(issue) {
 function computeMetrics(issues) {
   const total = issues.length;
   const statusCounts = { Open: 0, "In Progress": 0, Blocked: 0, Done: 0 };
-  const priorityCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+  const priorityCounts = { P1: 0, P2: 0, P3: 0, P4: 0 };
   const now = Date.now();
 
   for (const issue of issues) {
     statusCounts[statusBucket(issue)] += 1;
-    const priority = priorityCounts[issue.priority] === undefined ? "Medium" : issue.priority;
+    const priority = priorityBucket(issue.priority);
     priorityCounts[priority] += 1;
   }
 
@@ -172,6 +172,15 @@ function computeMetrics(issues) {
     priorityCounts,
     total
   };
+}
+
+function priorityBucket(priorityName) {
+  const priority = String(priorityName || "").toUpperCase();
+  if (priority.includes("P1") || priority.includes("CRITICAL") || priority.includes("HIGHEST")) return "P1";
+  if (priority.includes("P2") || priority.includes("HIGH")) return "P2";
+  if (priority.includes("P3") || priority.includes("MEDIUM")) return "P3";
+  if (priority.includes("P4") || priority.includes("LOW") || priority.includes("LOWEST")) return "P4";
+  return "P4";
 }
 
 async function handleSreApi(res) {

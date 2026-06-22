@@ -17,7 +17,7 @@
   };
 
   const statusOrder = ["Open", "In Progress", "Blocked", "Done"];
-  const priorityOrder = ["Critical", "High", "Medium", "Low"];
+  const priorityOrder = ["P1", "P2", "P3", "P4"];
 
   function getTeam() {
     return source.teams.find((team) => team.id === state.teamId) || source.teams[0];
@@ -141,22 +141,18 @@
   function snapshotSreMetrics() {
     const issues = source.sreFilterIssues || [];
     const statusCounts = { Open: 0, "In Progress": 0, Blocked: 0, Done: 0 };
-    const priorityCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+    const priorityCounts = { P1: 0, P2: 0, P3: 0, P4: 0 };
     issues.forEach((issue) => {
       statusCounts[sreStatusBucket(issue)] += 1;
-      const priority = priorityCounts[issue.priority] === undefined ? "Medium" : issue.priority;
+      const priority = priorityBucket(issue.priority);
       priorityCounts[priority] += 1;
     });
     const total = issues.length;
-    const health = total ? Math.round(((total - statusCounts.Blocked) / total) * 100) : 100;
     const progress = total ? Math.round(((statusCounts.Done + statusCounts["In Progress"] * 0.6) / total) * 100) : 0;
     return {
       open: statusCounts.Open,
       inProgress: statusCounts["In Progress"],
-      blocked: statusCounts.Blocked,
       completed: statusCounts.Done,
-      health,
-      sla: 100,
       progress,
       statusCounts,
       priorityCounts,
@@ -170,6 +166,15 @@
       return priorityOrder.map((value) => ({ value, count: counts[value] || 0 }));
     }
     return groupCount(fallbackIssues, "priority", priorityOrder);
+  }
+
+  function priorityBucket(priorityName) {
+    const priority = String(priorityName || "").toUpperCase();
+    if (priority.includes("P1") || priority.includes("CRITICAL") || priority.includes("HIGHEST")) return "P1";
+    if (priority.includes("P2") || priority.includes("HIGH")) return "P2";
+    if (priority.includes("P3") || priority.includes("MEDIUM")) return "P3";
+    if (priority.includes("P4") || priority.includes("LOW") || priority.includes("LOWEST")) return "P4";
+    return "P4";
   }
 
   function completionRate(items) {
@@ -236,8 +241,6 @@
           <section class="metrics-grid" aria-label="Summary metrics">
             ${metricCard("Open", metricValue(team, "open", 0), "Backlog load")}
             ${metricCard("In Progress", metricValue(team, "inProgress", 0), "Active execution")}
-            ${metricCard("Blocked", metricValue(team, "blocked", 0), "Needs attention")}
-            ${metricCard("Health", `${metricValue(team, "health", 0)}%`, "Service score")}
           </section>
 
           <section class="insights">
@@ -262,15 +265,6 @@
                     <strong>${item.count}</strong>
                   </div>
                 `).join("")}
-              </div>
-            </div>
-            <div class="panel health-panel">
-              <div class="panel-heading">
-                <h3>Delivery</h3>
-                <span>${metricValue(team, "sla", 0)}% SLA</span>
-              </div>
-              <div class="gauge" style="--score:${metricValue(team, "health", 0) * 3.6}deg">
-                <div>${metricValue(team, "health", 0)}%</div>
               </div>
             </div>
           </section>

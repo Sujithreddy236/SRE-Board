@@ -212,7 +212,7 @@ button {
 .metrics-grid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 16px;
 }
 
@@ -252,7 +252,7 @@ button {
 .insights {
   display: grid;
   gap: 14px;
-  grid-template-columns: 1.35fr 1fr 0.8fr;
+  grid-template-columns: 1.35fr 1fr;
   margin-bottom: 16px;
 }
 
@@ -331,12 +331,20 @@ button {
   font-size: 26px;
 }
 
-.priority-critical {
+.priority-p1 {
   border-color: rgba(190, 18, 60, 0.28);
 }
 
-.priority-high {
+.priority-p2 {
   border-color: rgba(217, 119, 6, 0.28);
+}
+
+.priority-p3 {
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+.priority-p4 {
+  border-color: rgba(21, 128, 61, 0.24);
 }
 
 .health-panel {
