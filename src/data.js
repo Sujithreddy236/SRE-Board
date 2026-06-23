@@ -89,29 +89,18 @@ window.SRE_BOARD_DATA = {
     }
   ],
   sreFilterIssues: [
-    { key: "PPSUPPORT-4097", summary: "Rejected Buyin - Cannot deserialize value of type PatronSessionEntity", assignee: "Filipe Ferreira", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4097", comments: [
-      { author: "Alfredo Vicente", created: "2026-06-22 15:16", body: "@Sharad Goel could please help follow up and assign someone to further look into this case. Application logs available under the linked SharePoint folder." },
-      { author: "Alfredo Vicente", created: "2026-06-16 16:09", body: "All Buy-in requests sent from Perfect Pay to CMS were verified and confirmed to follow the expected integration format and structure. The issue appears related to CMS handling session context during Buy-in processing." }
-    ] },
-    { key: "PPSUPPORT-4165", summary: "INC0704495 storage chip issue", assignee: "Daniel Vilar", status: "L3 in progress", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4165", comments: [
+    { key: "PPSUPPORT-4065", summary: "Perfect Pay Variance (12/06/2026 & MPMB601)", assignee: "Rahul Sharma", status: "L3 in progress", priority: "P4", customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4065" },
+    { key: "PPSUPPORT-3432", summary: "PP Data Issue: casino_player_id in t_session & t_player mismatch", assignee: "Onkar Surendra Anvekar", status: "L3 in progress", priority: "P3", customer: "MGM Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3432" },
+    { key: "PPSUPPORT-4119", summary: "Rejected Buyin - Buyin Summited Twice", assignee: "Amarnath Kumar", status: "L3 in progress", priority: "P2", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4119" },
+    { key: "PPSUPPORT-4129", summary: "Fill FL0011261050 sent twice to customer side", assignee: "Vansh Sharma", status: "L3 in progress", priority: "P4", customer: "Galaxy", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4129" },
+    { key: "PPSUPPORT-4165", summary: "INC0704495 storage chip issue", assignee: "Daniel Vilar", status: "L3 in progress", priority: "P4", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4165", comments: [
       { author: "Tony Leong", created: "2026-06-22 15:44", body: "Storage chip issue after the Melco Production upgrade to PP 2.6.4.2.18." },
       { author: "Tony Leong", created: "2026-06-22 15:43", body: "@Sharad Goel, could you please help arrange for someone to check the storage chip after the Melco Production upgrade to PP 2.6.4.2.18?" }
     ] },
-    { key: "PPSUPPORT-3202", summary: "Perfect cage - One piece of NN20 $10, 000 chip was shown invalid chip", assignee: "Amol Bhaskar Gite", status: "L3 in progress", customer: "Wynn Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3202", comments: [
+    { key: "PPSUPPORT-3202", summary: "Perfect cage - One piece of NN20 $10, 000 chip was shown invalid chip", assignee: "Amol Bhaskar Gite", status: "L3 in progress", priority: "P4", customer: "Wynn Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3202", comments: [
       { author: "Amol Bhaskar Gite", created: "2026-06-22 14:16", body: "Hi @Luis Abuan, can you please confirm if the below Chip IDs are part of Chip Cache and correspond to a valid chipset label?" },
       { author: "Luis Abuan", created: "2026-06-22 11:54", body: "Hi @Sharad Goel, please kindly help to assign resources to check on this. Thanks." }
-    ] },
-    { key: "PPSUPPORT-3432", summary: "PP Data Issue: casino_player_id in t_session & t_player mismatch", assignee: "Onkar Surendra Anvekar", status: "L3 in progress", customer: "MGM Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3432" },
-    { key: "PPSUPPORT-4065", summary: "Perfect Pay Variance (12/06/2026 & MPMB601)", assignee: "Rahul Sharma", status: "L3 in progress", customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4065" },
-    { key: "PPSUPPORT-4151", summary: "INC0704503 player session report cannot run", assignee: "Mohammad Shadab", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4151" },
-    { key: "PPSUPPORT-3932", summary: "Melco Macau | Pit889 changing the Template and Business Rules Rating", assignee: "Amarnath Kumar", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3932", comments: [
-      { author: "Tony Leong", created: "2026-06-22 09:44", body: "In one game ID, Record 1 chips_paid is the same as Record 13 chips_wagered. There was also an error message during the game process." },
-      { author: "Tony Leong", created: "2026-06-22 09:20", body: "In the table log 889016-app.log.2026-06-07-17-1.log, Game ID 313785194 started at 2026-06-07T17:05:47 and produced an error during processing." }
-    ] },
-    { key: "PPSUPPORT-4119", summary: "Rejected Buyin - Buyin Summited Twice", assignee: "Amarnath Kumar", status: "L3 in progress", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4119" },
-    { key: "PPSUPPORT-4129", summary: "Fill FL0011261050 sent twice to customer side", assignee: "Vansh Sharma", status: "L3 in progress", customer: "Galaxy", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4129" },
-    { key: "PPSUPPORT-4170", summary: "CVE-2022-22965 Spring4Shell Exploit Attempt on worker2 (rwppprdwrk02)", assignee: "Mayank Singh", status: "Awaiting engineering L3", customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4170" },
-    { key: "PPSUPPORT-4115", summary: "WDTS DB Alert - WRK1 is down & WRK5 out of sync", assignee: "Mohammad Shadab", status: "Awaiting engineering L3", customer: "Starworld", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4115" }
+    ] }
   ],
   issues: [
     { key: "SRE-101", team: "sre", type: "Incident", summary: "Reduce alert noise for payment gateway", status: "In Progress", priority: "High", owner: "Priya", due: "2026-06-28", progress: 64, updated: "2026-06-21" },
