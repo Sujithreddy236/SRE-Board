@@ -68,8 +68,26 @@ window.SRE_BOARD_DATA = {
       jql: "filter = 52237 ORDER BY updated DESC",
       inProgressJql: "filter = 52237 AND status = \"L3 in progress\" ORDER BY updated DESC",
       sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=52237"
-    }
+    },
+    sreReleases: [
+      {
+        name: "2.6.4.2.21_1",
+        releaseDate: "2026-06-12",
+        filterId: "59503",
+        jql: "filter = 59503 ORDER BY updated DESC",
+        sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59503"
+      }
+    ]
   },
+  releases: [
+    {
+      name: "2.6.4.2.21_1",
+      releaseDate: "2026-06-12",
+      filterId: "59503",
+      totalTickets: 8,
+      sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59503"
+    }
+  ],
   sreFilterIssues: [
     { key: "PPSUPPORT-4097", summary: "Rejected Buyin - Cannot deserialize value of type PatronSessionEntity", assignee: "Filipe Ferreira", status: "Awaiting engineering L3", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4097", comments: [
       { author: "Alfredo Vicente", created: "2026-06-22 15:16", body: "@Sharad Goel could please help follow up and assign someone to further look into this case. Application logs available under the linked SharePoint folder." },

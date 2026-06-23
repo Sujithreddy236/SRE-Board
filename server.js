@@ -10,6 +10,13 @@ const jiraBaseUrl = process.env.JIRA_BASE_URL || "https://wdtablesystems.atlassi
 const jiraFilterId = process.env.JIRA_FILTER_ID || "52237";
 const jiraEmail = process.env.JIRA_EMAIL;
 const jiraToken = process.env.JIRA_API_TOKEN;
+const releaseFilters = [
+  {
+    name: "2.6.4.2.21_1",
+    releaseDate: "2026-06-12",
+    filterId: "59503"
+  }
+];
 
 function loadEnv(filePath) {
   if (!fs.existsSync(filePath)) return;
@@ -67,6 +74,21 @@ async function jiraSearch(jql) {
   }
 
   return response.json();
+}
+
+function releaseSourceUrl(filterId) {
+  return `${jiraBaseUrl}/issues/?filter=${filterId}`;
+}
+
+async function fetchRelease(release) {
+  const jql = `filter = ${release.filterId} ORDER BY updated DESC`;
+  const result = await jiraSearch(jql);
+  return {
+    ...release,
+    jql,
+    sourceUrl: releaseSourceUrl(release.filterId),
+    totalTickets: result.total ?? (result.issues || []).length
+  };
 }
 
 function customerFromSummary(summary) {
@@ -194,7 +216,11 @@ async function handleSreApi(res) {
 
   const allJql = `filter = ${jiraFilterId} ORDER BY updated DESC`;
   const l3Jql = `filter = ${jiraFilterId} AND status = "L3 in progress" ORDER BY updated DESC`;
-  const [allResult, l3Result] = await Promise.all([jiraSearch(allJql), jiraSearch(l3Jql)]);
+  const [allResult, l3Result, releases] = await Promise.all([
+    jiraSearch(allJql),
+    jiraSearch(l3Jql),
+    Promise.all(releaseFilters.map(fetchRelease))
+  ]);
   const issues = (allResult.issues || []).map(mapIssue);
   const l3Issues = (l3Result.issues || []).map(mapIssue);
 
@@ -207,11 +233,17 @@ async function handleSreApi(res) {
         jql: allJql,
         inProgressJql: l3Jql,
         sourceUrl: `${jiraBaseUrl}/issues/?filter=${jiraFilterId}`
-      }
+      },
+      sreReleases: releaseFilters.map((release) => ({
+        ...release,
+        jql: `filter = ${release.filterId} ORDER BY updated DESC`,
+        sourceUrl: releaseSourceUrl(release.filterId)
+      }))
     },
     metrics: computeMetrics(issues),
     sreFilterIssues: issues,
-    sreL3Issues: l3Issues
+    sreL3Issues: l3Issues,
+    releases
   }));
 }
 

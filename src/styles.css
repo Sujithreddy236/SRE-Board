@@ -528,6 +528,10 @@ table {
   min-width: 760px;
 }
 
+.release-table {
+  min-width: 620px;
+}
+
 .selected-row td {
   background: #f0fdfa;
 }

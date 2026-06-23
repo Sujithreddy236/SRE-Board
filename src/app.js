@@ -27,6 +27,7 @@
     if (!payload || !Array.isArray(payload.sreFilterIssues)) return;
     source.sreFilterIssues = payload.sreFilterIssues;
     source.sreL3Issues = payload.sreL3Issues || payload.sreFilterIssues.filter((issue) => issue.status === "L3 in progress");
+    source.releases = payload.releases || source.releases || [];
     source.jiraFilters = { ...source.jiraFilters, ...payload.jiraFilters };
     const sreTeam = source.teams.find((team) => team.id === "sre");
     if (sreTeam && payload.metrics) {
@@ -192,6 +193,7 @@
     const issues = getFilteredIssues();
     const sreTabSource = getSreTabSource();
     const sreIssues = getSreIssues();
+    const releases = source.releases || [];
     const sreInProgressCount = (source.sreL3Issues || source.sreFilterIssues.filter((issue) => issue.status === "L3 in progress")).length;
     const statusCounts = team.id === "sre" ? getStatusCounts(team, allTeamIssues) : groupCount(allTeamIssues, "status", statusOrder);
     const priorityCounts = team.id === "sre" ? getPriorityCounts(team, allTeamIssues) : groupCount(allTeamIssues, "priority", priorityOrder);
@@ -269,9 +271,9 @@
             </div>
           </section>
 
-          ${team.id === "sre" ? renderTabs(sreInProgressCount) : ""}
+          ${team.id === "sre" ? renderTabs(sreInProgressCount, releases.length) : ""}
 
-          ${team.id === "sre" ? renderSreJiraTab(sreIssues, getAssignees(sreTabSource), sreTabSource) : `
+          ${team.id === "sre" ? (state.tab === "releases" ? renderReleaseTab(releases) : renderSreJiraTab(sreIssues, getAssignees(sreTabSource), sreTabSource)) : `
           <section class="work-area">
             <div class="filters">
               <label>
@@ -341,7 +343,7 @@
     `;
   }
 
-  function renderTabs(inProgressCount) {
+  function renderTabs(inProgressCount, releaseCount) {
     return `
       <div class="tabs" role="tablist" aria-label="SRE dashboard tabs">
         <button class="tab-button ${state.tab === "overview" ? "active" : ""}" data-tab="overview" role="tab">
@@ -350,8 +352,59 @@
         <button class="tab-button ${state.tab === "in-progress" ? "active" : ""}" data-tab="in-progress" role="tab">
           In Progress <span>${inProgressCount}</span>
         </button>
+        <button class="tab-button ${state.tab === "releases" ? "active" : ""}" data-tab="releases" role="tab">
+          Releases <span>${releaseCount}</span>
+        </button>
       </div>
     `;
+  }
+
+  function renderReleaseTab(releases) {
+    return `
+      <section class="work-area">
+        <div class="jira-strip">
+          <div>
+            <strong>Releases</strong>
+            <p>Release ticket totals from configured Jira filters</p>
+          </div>
+        </div>
+        <div class="table-shell">
+          <table class="release-table">
+            <thead>
+              <tr>
+                <th>Release Name</th>
+                <th>Release Date</th>
+                <th>Total Tickets</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${releases.map(releaseRow).join("") || `<tr><td colspan="3" class="empty">No releases configured yet</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function releaseRow(release) {
+    return `
+      <tr>
+        <td>
+          <a class="jira-link" href="${release.sourceUrl}" target="_blank" rel="noreferrer">
+            ${escapeHtml(release.name)}
+          </a>
+        </td>
+        <td>${formatReleaseDate(release.releaseDate)}</td>
+        <td><strong>${release.totalTickets ?? 0}</strong></td>
+      </tr>
+    `;
+  }
+
+  function formatReleaseDate(value) {
+    if (!value) return "";
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return escapeHtml(value);
+    return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   }
 
   function renderSreJiraTab(issues, assignees, tabIssues) {
