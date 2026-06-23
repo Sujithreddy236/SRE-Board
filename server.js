@@ -17,6 +17,10 @@ const releaseFilters = [
     filterId: "59503"
   }
 ];
+const tokenPlaceholders = new Set([
+  "replace-with-your-atlassian-api-token",
+  "your-atlassian-api-token"
+]);
 
 function loadEnv(filePath) {
   if (!fs.existsSync(filePath)) return;
@@ -233,7 +237,7 @@ function configuredJiraSyncs() {
 }
 
 async function handleSreApi(res) {
-  if (!jiraEmail || !jiraToken || jiraToken === "replace-with-your-atlassian-api-token") {
+  if (!jiraEmail || !jiraToken || tokenPlaceholders.has(jiraToken)) {
     send(res, 503, JSON.stringify({
       error: "Jira credentials are not configured.",
       requiredEnv: ["JIRA_EMAIL", "JIRA_API_TOKEN"],
