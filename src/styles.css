@@ -419,6 +419,42 @@ button {
   background: rgba(255, 255, 255, 0.22);
 }
 
+.release-type-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.release-type-button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  color: #304155;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.release-type-button.active {
+  background: #17202b;
+  border-color: #17202b;
+  color: #fff;
+}
+
+.release-type-button span {
+  background: rgba(23, 32, 43, 0.1);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.release-type-button.active span {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .jira-strip {
   align-items: center;
   background: #fff;

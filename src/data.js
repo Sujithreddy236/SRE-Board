@@ -74,6 +74,7 @@ window.SRE_BOARD_DATA = {
         name: "2.6.4.2.21_1",
         releaseDate: "2026-06-12",
         filterId: "59503",
+        type: "patch",
         jql: "filter = 59503 ORDER BY updated DESC",
         sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59503"
       }
@@ -84,6 +85,7 @@ window.SRE_BOARD_DATA = {
       name: "2.6.4.2.21_1",
       releaseDate: "2026-06-12",
       filterId: "59503",
+      type: "patch",
       totalTickets: 8,
       sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59503"
     }

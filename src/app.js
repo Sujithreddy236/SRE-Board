@@ -13,12 +13,17 @@
     status: "All",
     priority: "All",
     assignee: "All",
+    releaseType: "patch",
     selectedIssueKey: "",
     query: ""
   };
 
   const statusOrder = ["Open", "In Progress", "Blocked", "Done"];
   const priorityOrder = ["P1", "P2", "P3", "P4"];
+  const releaseTypes = [
+    { id: "patch", label: "Patch" },
+    { id: "hotfix", label: "Hotfix" }
+  ];
 
   function getTeam() {
     return source.teams.find((team) => team.id === state.teamId) || source.teams[0];
@@ -377,6 +382,7 @@
   }
 
   function renderReleaseTab(releases) {
+    const visibleReleases = releases.filter((release) => (release.type || "patch") === state.releaseType);
     return `
       <section class="work-area">
         <div class="jira-strip">
@@ -384,6 +390,16 @@
             <strong>Releases</strong>
             <p>Release ticket totals from configured Jira filters</p>
           </div>
+        </div>
+        <div class="release-type-tabs" role="tablist" aria-label="Release types">
+          ${releaseTypes.map((type) => {
+            const count = releases.filter((release) => (release.type || "patch") === type.id).length;
+            return `
+              <button class="release-type-button ${state.releaseType === type.id ? "active" : ""}" data-release-type="${type.id}" role="tab">
+                ${type.label} <span>${count}</span>
+              </button>
+            `;
+          }).join("")}
         </div>
         <div class="table-shell">
           <table class="release-table">
@@ -395,12 +411,16 @@
               </tr>
             </thead>
             <tbody>
-              ${releases.map(releaseRow).join("") || `<tr><td colspan="3" class="empty">No releases configured yet</td></tr>`}
+              ${visibleReleases.map(releaseRow).join("") || `<tr><td colspan="3" class="empty">No ${releaseTypeLabel(state.releaseType)} releases configured yet</td></tr>`}
             </tbody>
           </table>
         </div>
       </section>
     `;
+  }
+
+  function releaseTypeLabel(typeId) {
+    return releaseTypes.find((type) => type.id === typeId)?.label || "matching";
   }
 
   function releaseRow(release) {
@@ -570,6 +590,7 @@
         state.status = "All";
         state.priority = "All";
         state.assignee = "All";
+        state.releaseType = "patch";
         state.selectedIssueKey = "";
         state.query = "";
         render();
@@ -590,6 +611,13 @@
       button.addEventListener("click", () => {
         state.assignee = button.dataset.assignee;
         state.selectedIssueKey = "";
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-release-type]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.releaseType = button.dataset.releaseType;
         render();
       });
     });

@@ -14,7 +14,8 @@ const releaseFilters = [
   {
     name: "2.6.4.2.21_1",
     releaseDate: "2026-06-12",
-    filterId: "59503"
+    filterId: "59503",
+    type: "patch"
   }
 ];
 const tokenPlaceholders = new Set([

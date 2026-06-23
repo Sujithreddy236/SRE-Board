@@ -37,7 +37,7 @@ The dashboard calls `/api/sre` for live Jira data on every page load and refresh
 - Live Jira ingestion through `server.js`
 - Fresh Jira sync for every configured JQL filter on page load and manual refresh
 - SRE `Overview` and `In Progress` tabs sourced from Jira filter `52237`
-- SRE `Releases` tab sourced from configured release Jira filters
+- SRE `Releases` tab sourced from configured release Jira filters, grouped by Patch and Hotfix
 - SRE summary cards show only Open and In Progress
 - Priority uses Jira-derived P1, P2, P3, and P4 buckets
 
@@ -93,10 +93,14 @@ Jira Id interaction:
 
 ## SRE Releases
 
-The SRE `Releases` tab currently includes:
+The SRE `Releases` tab is grouped into `Patch` and `Hotfix`.
+
+The `Patch` tab currently includes:
 
 | Release | Release date | Jira filter |
 | --- | --- | --- |
 | 2.6.4.2.21_1 | 2026-06-12 | 59503 |
+
+The `Hotfix` tab is ready for hotfix release filters when they are provided.
 
 The live API fetches each configured release filter and displays the total Jira ticket count for that release.
