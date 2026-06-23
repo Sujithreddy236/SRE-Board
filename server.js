@@ -43,7 +43,12 @@ const mimeTypes = {
 };
 
 function send(res, status, body, type = "application/json; charset=utf-8") {
-  res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
+  res.writeHead(status, {
+    "Content-Type": type,
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0"
+  });
   res.end(body);
 }
 
@@ -226,6 +231,7 @@ async function handleSreApi(res) {
 
   send(res, 200, JSON.stringify({
     fetchedAt: new Date().toISOString(),
+    syncMode: "fresh",
     jiraFilters: {
       sreInProgress: {
         cloudUrl: jiraBaseUrl,

@@ -51,7 +51,14 @@
     liveStatus = { mode: "loading", message: "Refreshing Jira data", fetchedAt: liveStatus.fetchedAt };
     render();
     try {
-      const response = await fetch("/api/sre", { cache: "no-store" });
+      const syncId = Date.now();
+      const response = await fetch(`/api/sre?sync=${syncId}`, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache"
+        }
+      });
       if (!response.ok) throw new Error(`Jira API unavailable (${response.status})`);
       const payload = await response.json();
       applyLiveSreData(payload);
