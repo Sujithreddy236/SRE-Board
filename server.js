@@ -111,12 +111,27 @@ function summaryWithoutCustomer(summary) {
 }
 
 function commentText(comment) {
-  return String(comment.body || "")
+  return adfText(comment.body)
     .replace(/<custom[^>]*>/g, "")
     .replace(/<\/custom>/g, "")
     .replace(/!\[\]\([^)]*\)/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function adfText(node) {
+  if (!node) return "";
+  if (typeof node === "string") return node;
+  if (Array.isArray(node)) return node.map(adfText).filter(Boolean).join(" ");
+  if (typeof node !== "object") return String(node);
+
+  const pieces = [];
+  if (node.type === "mention" && node.attrs?.text) pieces.push(node.attrs.text);
+  if (node.type === "emoji" && node.attrs?.shortName) pieces.push(node.attrs.shortName);
+  if (node.type === "inlineCard" && node.attrs?.url) pieces.push(node.attrs.url);
+  if (node.text) pieces.push(node.text);
+  if (node.content) pieces.push(adfText(node.content));
+  return pieces.filter(Boolean).join(" ");
 }
 
 function mapIssue(issue) {
