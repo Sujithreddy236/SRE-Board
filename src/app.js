@@ -4,7 +4,8 @@
   let liveStatus = {
     mode: "snapshot",
     message: "Snapshot data active",
-    fetchedAt: ""
+    fetchedAt: "",
+    details: ""
   };
   const state = {
     teamId: "sre",
@@ -59,19 +60,27 @@
           "Pragma": "no-cache"
         }
       });
-      if (!response.ok) throw new Error(`Jira API unavailable (${response.status})`);
       const payload = await response.json();
+      if (!response.ok) {
+        const error = new Error(payload.error || `Jira API unavailable (${response.status})`);
+        error.payload = payload;
+        error.status = response.status;
+        throw error;
+      }
       applyLiveSreData(payload);
       liveStatus = {
         mode: "live",
         message: "Live Jira data",
-        fetchedAt: payload.fetchedAt || new Date().toISOString()
+        fetchedAt: payload.fetchedAt || new Date().toISOString(),
+        details: "Overview, In Progress, and Releases synced from Jira"
       };
     } catch (error) {
+      const missingToken = error.payload?.requiredEnv?.includes("JIRA_API_TOKEN");
       liveStatus = {
-        mode: "snapshot",
-        message: `${error.message}; using snapshot`,
-        fetchedAt: ""
+        mode: missingToken ? "error" : "snapshot",
+        message: missingToken ? "Live sync blocked: set JIRA_API_TOKEN" : `${error.message}; using snapshot`,
+        fetchedAt: "",
+        details: missingToken ? "Showing fallback data until Jira credentials are configured" : ""
       };
     }
     render();
@@ -230,6 +239,7 @@
             <div>
               <strong>Jira Sync</strong>
               <p>${escapeHtml(liveStatus.message)}</p>
+              ${liveStatus.details ? `<p>${escapeHtml(liveStatus.details)}</p>` : ""}
             </div>
           </div>
         </aside>

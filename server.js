@@ -210,17 +210,42 @@ function priorityBucket(priorityName) {
   return "P4";
 }
 
+function configuredJiraSyncs() {
+  const allJql = `filter = ${jiraFilterId} ORDER BY updated DESC`;
+  const l3Jql = `filter = ${jiraFilterId} AND status = "L3 in progress" ORDER BY updated DESC`;
+  return {
+    overview: {
+      filterId: jiraFilterId,
+      jql: allJql,
+      sourceUrl: `${jiraBaseUrl}/issues/?filter=${jiraFilterId}`
+    },
+    inProgress: {
+      filterId: jiraFilterId,
+      jql: l3Jql,
+      sourceUrl: `${jiraBaseUrl}/issues/?filter=${jiraFilterId}`
+    },
+    releases: releaseFilters.map((release) => ({
+      ...release,
+      jql: `filter = ${release.filterId} ORDER BY updated DESC`,
+      sourceUrl: releaseSourceUrl(release.filterId)
+    }))
+  };
+}
+
 async function handleSreApi(res) {
   if (!jiraEmail || !jiraToken || jiraToken === "replace-with-your-atlassian-api-token") {
     send(res, 503, JSON.stringify({
       error: "Jira credentials are not configured.",
-      requiredEnv: ["JIRA_EMAIL", "JIRA_API_TOKEN"]
+      requiredEnv: ["JIRA_EMAIL", "JIRA_API_TOKEN"],
+      syncMode: "blocked",
+      jiraSyncs: configuredJiraSyncs()
     }, null, 2));
     return;
   }
 
-  const allJql = `filter = ${jiraFilterId} ORDER BY updated DESC`;
-  const l3Jql = `filter = ${jiraFilterId} AND status = "L3 in progress" ORDER BY updated DESC`;
+  const syncs = configuredJiraSyncs();
+  const allJql = syncs.overview.jql;
+  const l3Jql = syncs.inProgress.jql;
   const [allResult, l3Result, releases] = await Promise.all([
     jiraSearch(allJql),
     jiraSearch(l3Jql),
@@ -232,6 +257,7 @@ async function handleSreApi(res) {
   send(res, 200, JSON.stringify({
     fetchedAt: new Date().toISOString(),
     syncMode: "fresh",
+    jiraSyncs: syncs,
     jiraFilters: {
       sreInProgress: {
         cloudUrl: jiraBaseUrl,

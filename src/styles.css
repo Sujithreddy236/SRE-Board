@@ -152,6 +152,11 @@ button {
   box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.14);
 }
 
+.sync-error {
+  background: #dc2626;
+  box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.14);
+}
+
 .main {
   min-width: 0;
   padding: 28px;
