@@ -561,8 +561,8 @@ button {
 }
 
 .assignee-chip.active {
-  background: var(--wdts-black);
-  border-color: var(--wdts-black);
+  background: var(--wdts-red);
+  border-color: var(--wdts-red);
   color: #fff;
 }
 
