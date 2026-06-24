@@ -146,14 +146,22 @@
   }
 
   function normalizeRelease(release) {
+    const filterId = extractFilterId(release.filterId);
     return {
       name: String(release.name || "").trim(),
       releaseDate: String(release.releaseDate || "").trim(),
-      filterId: String(release.filterId || "").trim(),
+      filterId,
       type: String(release.type || "patch").trim(),
       totalTickets: Number(release.totalTickets || 0),
-      sourceUrl: release.sourceUrl || `https://wdtablesystems.atlassian.net/issues/?filter=${release.filterId}`
+      sourceUrl: release.sourceUrl || `https://wdtablesystems.atlassian.net/issues/?filter=${filterId}`
     };
+  }
+
+  function extractFilterId(value) {
+    const text = String(value || "").trim();
+    const urlMatch = text.match(/[?&]filter=(\d+)/i);
+    if (urlMatch) return urlMatch[1];
+    return /^\d+$/.test(text) ? text : "";
   }
 
   function releaseKey(release) {
@@ -443,8 +451,8 @@
             </select>
           </label>
           <label>
-            <span>Jira filter</span>
-            <input id="releaseFilterInput" required inputmode="numeric" pattern="[0-9]+" placeholder="59503" />
+            <span>Jira filter link or ID</span>
+            <input id="releaseFilterInput" required placeholder="59503 or Jira filter URL" />
           </label>
           <label>
             <span>Release date</span>
@@ -733,6 +741,10 @@
       filterId: document.getElementById("releaseFilterInput").value,
       releaseDate: document.getElementById("releaseDateInput").value
     });
+    if (!release.filterId) {
+      alert("Enter a numeric Jira filter ID or a Jira URL containing ?filter=ID.");
+      return;
+    }
 
     const button = form.querySelector("button[type='submit']");
     button.disabled = true;

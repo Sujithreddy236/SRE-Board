@@ -90,6 +90,14 @@ function releaseSourceUrl(filterId) {
   return `${jiraBaseUrl}/issues/?filter=${filterId}`;
 }
 
+function extractFilterId(value) {
+  const text = String(value || "").trim();
+  const urlMatch = text.match(/[?&]filter=(\d+)/i);
+  if (urlMatch) return urlMatch[1];
+  const idMatch = text.match(/^\d+$/);
+  return idMatch ? idMatch[0] : "";
+}
+
 async function fetchRelease(release) {
   const jql = `filter = ${release.filterId} ORDER BY updated DESC`;
   const result = await jiraSearch(jql);
@@ -111,9 +119,9 @@ async function handleReleaseCountApi(req, res) {
   }
 
   const url = new URL(req.url, `http://localhost:${port}`);
-  const filterId = String(url.searchParams.get("filterId") || "").trim();
-  if (!/^\d+$/.test(filterId)) {
-    send(res, 400, JSON.stringify({ error: "A numeric Jira filterId is required." }, null, 2));
+  const filterId = extractFilterId(url.searchParams.get("filterId"));
+  if (!filterId) {
+    send(res, 400, JSON.stringify({ error: "A numeric Jira filter ID or Jira filter URL is required." }, null, 2));
     return;
   }
 
