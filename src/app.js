@@ -24,6 +24,9 @@
     { id: "patch", label: "Patch" },
     { id: "hotfix", label: "Hotfix" }
   ];
+  const customReleaseStorageKey = "sre-board-custom-releases";
+
+  source.releases = mergeReleases(source.releases || [], getStoredReleases());
 
   function getTeam() {
     return source.teams.find((team) => team.id === state.teamId) || source.teams[0];
@@ -33,7 +36,7 @@
     if (!payload || !Array.isArray(payload.sreFilterIssues)) return;
     source.sreFilterIssues = payload.sreFilterIssues;
     source.sreL3Issues = payload.sreL3Issues || payload.sreFilterIssues.filter((issue) => issue.status === "L3 in progress");
-    source.releases = payload.releases || source.releases || [];
+    source.releases = mergeReleases(payload.releases || [], getStoredReleases());
     source.jiraFilters = { ...source.jiraFilters, ...payload.jiraFilters };
     const sreTeam = source.teams.find((team) => team.id === "sre");
     if (sreTeam && payload.metrics) {
@@ -128,6 +131,41 @@
 
   function getAssignees(items) {
     return [...new Set(items.map((issue) => issue.assignee).filter(Boolean))].sort();
+  }
+
+  function getStoredReleases() {
+    try {
+      return JSON.parse(localStorage.getItem(customReleaseStorageKey) || "[]").map(normalizeRelease);
+    } catch {
+      return [];
+    }
+  }
+
+  function saveStoredReleases(releases) {
+    localStorage.setItem(customReleaseStorageKey, JSON.stringify(releases.map(normalizeRelease)));
+  }
+
+  function normalizeRelease(release) {
+    return {
+      name: String(release.name || "").trim(),
+      releaseDate: String(release.releaseDate || "").trim(),
+      filterId: String(release.filterId || "").trim(),
+      type: String(release.type || "patch").trim(),
+      totalTickets: Number(release.totalTickets || 0),
+      sourceUrl: release.sourceUrl || `https://wdtablesystems.atlassian.net/issues/?filter=${release.filterId}`
+    };
+  }
+
+  function releaseKey(release) {
+    return `${release.type || "patch"}:${release.filterId}:${release.name}`;
+  }
+
+  function mergeReleases(baseReleases, customReleases) {
+    const map = new Map();
+    [...baseReleases, ...customReleases].map(normalizeRelease).forEach((release) => {
+      if (release.name && release.filterId) map.set(releaseKey(release), release);
+    });
+    return [...map.values()].sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
   }
 
   function groupCount(items, field, values) {
@@ -393,6 +431,27 @@
             <p>Release ticket totals from configured Jira filters</p>
           </div>
         </div>
+        <form class="release-form" id="releaseForm">
+          <label>
+            <span>Release name</span>
+            <input id="releaseNameInput" required placeholder="2.6.4.2.21_2" />
+          </label>
+          <label>
+            <span>Release type</span>
+            <select id="releaseTypeInput">
+              ${releaseTypes.map((type) => `<option value="${type.id}">${type.label}</option>`).join("")}
+            </select>
+          </label>
+          <label>
+            <span>Jira filter</span>
+            <input id="releaseFilterInput" required inputmode="numeric" pattern="[0-9]+" placeholder="59503" />
+          </label>
+          <label>
+            <span>Release date</span>
+            <input id="releaseDateInput" required type="date" />
+          </label>
+          <button class="primary-button release-submit" type="submit">Add Release</button>
+        </form>
         <div class="release-type-tabs" role="tablist" aria-label="Release types">
           ${releaseTypes.map((type) => {
             const count = releases.filter((release) => (release.type || "patch") === type.id).length;
@@ -624,6 +683,8 @@
       });
     });
 
+    document.getElementById("releaseForm")?.addEventListener("submit", handleReleaseSubmit);
+
     document.querySelectorAll("[data-issue-key]").forEach((button) => {
       button.addEventListener("click", () => {
         clearTimeout(issueClickTimer);
@@ -661,6 +722,49 @@
 
     document.getElementById("refreshButton").addEventListener("click", () => refreshLiveData());
     document.getElementById("exportButton").addEventListener("click", exportJson);
+  }
+
+  async function handleReleaseSubmit(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const release = normalizeRelease({
+      name: document.getElementById("releaseNameInput").value,
+      type: document.getElementById("releaseTypeInput").value,
+      filterId: document.getElementById("releaseFilterInput").value,
+      releaseDate: document.getElementById("releaseDateInput").value
+    });
+
+    const button = form.querySelector("button[type='submit']");
+    button.disabled = true;
+    button.textContent = "Adding...";
+
+    try {
+      const count = await fetchReleaseTicketCount(release.filterId);
+      release.totalTickets = count.totalTickets;
+      release.sourceUrl = count.sourceUrl || release.sourceUrl;
+    } catch {
+      release.totalTickets = 0;
+    }
+
+    const stored = getStoredReleases().filter((item) => releaseKey(item) !== releaseKey(release));
+    stored.push(release);
+    saveStoredReleases(stored);
+    source.releases = mergeReleases(source.releases || [], stored);
+    state.releaseType = release.type;
+    form.reset();
+    render();
+  }
+
+  async function fetchReleaseTicketCount(filterId) {
+    const response = await fetch(`/api/release-count?filterId=${encodeURIComponent(filterId)}&sync=${Date.now()}`, {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
+    if (!response.ok) throw new Error(`Release count unavailable (${response.status})`);
+    return response.json();
   }
 
   function exportJson() {

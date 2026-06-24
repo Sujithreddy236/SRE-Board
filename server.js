@@ -101,6 +101,31 @@ async function fetchRelease(release) {
   };
 }
 
+async function handleReleaseCountApi(req, res) {
+  if (!jiraEmail || !jiraToken || tokenPlaceholders.has(jiraToken)) {
+    send(res, 503, JSON.stringify({
+      error: "Jira credentials are not configured.",
+      requiredEnv: ["JIRA_EMAIL", "JIRA_API_TOKEN"]
+    }, null, 2));
+    return;
+  }
+
+  const url = new URL(req.url, `http://localhost:${port}`);
+  const filterId = String(url.searchParams.get("filterId") || "").trim();
+  if (!/^\d+$/.test(filterId)) {
+    send(res, 400, JSON.stringify({ error: "A numeric Jira filterId is required." }, null, 2));
+    return;
+  }
+
+  const release = await fetchRelease({ filterId });
+  send(res, 200, JSON.stringify({
+    filterId,
+    jql: release.jql,
+    sourceUrl: release.sourceUrl,
+    totalTickets: release.totalTickets
+  }, null, 2));
+}
+
 function customerFromSummary(summary) {
   const [customer] = String(summary || "").split("|");
   return customer ? customer.trim() : "Unassigned";
@@ -320,6 +345,10 @@ function serveStatic(req, res) {
 
 http.createServer(async (req, res) => {
   try {
+    if (req.url.startsWith("/api/release-count")) {
+      await handleReleaseCountApi(req, res);
+      return;
+    }
     if (req.url.startsWith("/api/sre")) {
       await handleSreApi(res);
       return;

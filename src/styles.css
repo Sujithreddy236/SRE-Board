@@ -469,6 +469,44 @@ button {
   gap: 8px;
 }
 
+.release-form {
+  align-items: end;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--wdts-line);
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(23, 23, 23, 0.07);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 1.2fr) 150px 150px 170px auto;
+  padding: 16px;
+}
+
+.release-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.release-form span {
+  color: #6b6561;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.release-form input,
+.release-form select {
+  background: #fff;
+  border: 1px solid #d8d2cc;
+  border-radius: 8px;
+  color: var(--wdts-black);
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.release-submit {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
 .release-type-button {
   align-items: center;
   background: #fff;
@@ -842,6 +880,7 @@ td:nth-child(2) {
   .metrics-grid,
   .insights,
   .filters,
+  .release-form,
   .team-nav {
     grid-template-columns: 1fr;
   }
