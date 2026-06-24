@@ -135,14 +135,20 @@
 
   function getStoredReleases() {
     try {
-      return JSON.parse(localStorage.getItem(customReleaseStorageKey) || "[]").map(normalizeRelease);
+      return JSON.parse(localStorage.getItem(customReleaseStorageKey) || "[]").map((release) => ({
+        ...normalizeRelease(release),
+        custom: true
+      }));
     } catch {
       return [];
     }
   }
 
   function saveStoredReleases(releases) {
-    localStorage.setItem(customReleaseStorageKey, JSON.stringify(releases.map(normalizeRelease)));
+    localStorage.setItem(customReleaseStorageKey, JSON.stringify(releases.map((release) => ({
+      ...normalizeRelease(release),
+      custom: true
+    }))));
   }
 
   function normalizeRelease(release) {
@@ -153,7 +159,8 @@
       filterId,
       type: String(release.type || "patch").trim(),
       totalTickets: Number(release.totalTickets || 0),
-      sourceUrl: release.sourceUrl || `https://wdtablesystems.atlassian.net/issues/?filter=${filterId}`
+      sourceUrl: release.sourceUrl || `https://wdtablesystems.atlassian.net/issues/?filter=${filterId}`,
+      custom: Boolean(release.custom)
     };
   }
 
@@ -477,10 +484,11 @@
                 <th>Release Name</th>
                 <th>Release Date</th>
                 <th>Total Tickets</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              ${visibleReleases.map(releaseRow).join("") || `<tr><td colspan="3" class="empty">No ${releaseTypeLabel(state.releaseType)} releases configured yet</td></tr>`}
+              ${visibleReleases.map(releaseRow).join("") || `<tr><td colspan="4" class="empty">No ${releaseTypeLabel(state.releaseType)} releases configured yet</td></tr>`}
             </tbody>
           </table>
         </div>
@@ -502,6 +510,13 @@
         </td>
         <td>${formatReleaseDate(release.releaseDate)}</td>
         <td><strong>${release.totalTickets ?? 0}</strong></td>
+        <td>
+          ${release.custom ? `
+            <button class="delete-release-button" data-release-key="${escapeHtml(releaseKey(release))}">
+              Delete
+            </button>
+          ` : `<span class="locked-release">Built-in</span>`}
+        </td>
       </tr>
     `;
   }
@@ -693,6 +708,12 @@
 
     document.getElementById("releaseForm")?.addEventListener("submit", handleReleaseSubmit);
 
+    document.querySelectorAll("[data-release-key]").forEach((button) => {
+      button.addEventListener("click", () => {
+        deleteStoredRelease(button.dataset.releaseKey);
+      });
+    });
+
     document.querySelectorAll("[data-issue-key]").forEach((button) => {
       button.addEventListener("click", () => {
         clearTimeout(issueClickTimer);
@@ -764,6 +785,16 @@
     source.releases = mergeReleases(source.releases || [], stored);
     state.releaseType = release.type;
     form.reset();
+    render();
+  }
+
+  function deleteStoredRelease(key) {
+    const stored = getStoredReleases().filter((release) => releaseKey(release) !== key);
+    saveStoredReleases(stored);
+    source.releases = mergeReleases(
+      (source.releases || []).filter((release) => !release.custom || releaseKey(release) !== key),
+      stored
+    );
     render();
   }
 
