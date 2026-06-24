@@ -225,10 +225,12 @@
       <div class="shell" style="--accent: ${team.accent}">
         <aside class="sidebar">
           <div class="brand">
-            <div class="brand-mark">SB</div>
+            <div class="brand-mark">
+              <img src="https://wdtablesystems.com/wp-content/uploads/2024/09/logo-wdts.jpg" alt="WDTS" />
+            </div>
             <div>
-              <h1>SRE Board</h1>
-              <p>Jira operations dashboard</p>
+              <h1>Operations Dashboard</h1>
+              <p>Walker Digital Table Systems</p>
             </div>
           </div>
           <nav class="team-nav" aria-label="Teams">
@@ -257,7 +259,7 @@
               <p class="focus">${team.focus}</p>
             </div>
             <div class="top-actions">
-              <button class="icon-button" id="refreshButton" title="Refresh">↻</button>
+              <button class="icon-button" id="refreshButton" title="Refresh">Refresh</button>
               <button class="primary-button" id="exportButton">Export JSON</button>
             </div>
           </header>
