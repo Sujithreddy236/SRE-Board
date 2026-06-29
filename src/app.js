@@ -19,7 +19,7 @@
   };
 
   const statusOrder = ["Open", "In Progress", "Blocked", "Done"];
-  const priorityOrder = ["P1", "P2", "P3", "P4"];
+  const priorityOrder = ["Top3", "P2", "P3", "P4"];
   const releaseTypes = [
     { id: "patch", label: "Patch" },
     { id: "hotfix", label: "Hotfix" }
@@ -217,10 +217,10 @@
   function snapshotSreMetrics() {
     const issues = source.sreFilterIssues || [];
     const statusCounts = { Open: 0, "In Progress": 0, Blocked: 0, Done: 0 };
-    const priorityCounts = { P1: 0, P2: 0, P3: 0, P4: 0 };
+    const priorityCounts = { Top3: 0, P2: 0, P3: 0, P4: 0 };
     issues.forEach((issue) => {
       statusCounts[sreStatusBucket(issue)] += 1;
-      const priority = priorityBucket(issue.priority);
+      const priority = priorityBucket(issue);
       priorityCounts[priority] += 1;
     });
     const total = issues.length;
@@ -244,9 +244,11 @@
     return groupCount(fallbackIssues, "priority", priorityOrder);
   }
 
-  function priorityBucket(priorityName) {
-    const priority = String(priorityName || "").toUpperCase();
-    if (priority.includes("P1") || priority.includes("CRITICAL") || priority.includes("HIGHEST")) return "P1";
+  function priorityBucket(issue) {
+    const labels = Array.isArray(issue.labels) ? issue.labels : [];
+    if (labels.some((label) => String(label).toLowerCase() === "top3")) return "Top3";
+
+    const priority = String(issue.priority || "").toUpperCase();
     if (priority.includes("P2") || priority.includes("HIGH")) return "P2";
     if (priority.includes("P3") || priority.includes("MEDIUM")) return "P3";
     if (priority.includes("P4") || priority.includes("LOW") || priority.includes("LOWEST")) return "P4";

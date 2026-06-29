@@ -93,15 +93,15 @@ window.SRE_BOARD_DATA = {
     }
   ],
   sreFilterIssues: [
-    { key: "PPSUPPORT-4065", summary: "Perfect Pay Variance (12/06/2026 & MPMB601)", assignee: "Rahul Sharma", status: "L3 in progress", priority: "P4", customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4065" },
-    { key: "PPSUPPORT-3432", summary: "PP Data Issue: casino_player_id in t_session & t_player mismatch", assignee: "Onkar Surendra Anvekar", status: "L3 in progress", priority: "P3", customer: "MGM Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3432" },
-    { key: "PPSUPPORT-4119", summary: "Rejected Buyin - Buyin Summited Twice", assignee: "Amarnath Kumar", status: "L3 in progress", priority: "P2", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4119" },
-    { key: "PPSUPPORT-4129", summary: "Fill FL0011261050 sent twice to customer side", assignee: "Vansh Sharma", status: "L3 in progress", priority: "P4", customer: "Galaxy", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4129" },
-    { key: "PPSUPPORT-4165", summary: "INC0704495 storage chip issue", assignee: "Daniel Vilar", status: "L3 in progress", priority: "P4", customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4165", comments: [
+    { key: "PPSUPPORT-4065", summary: "Perfect Pay Variance (12/06/2026 & MPMB601)", assignee: "Rahul Sharma", status: "L3 in progress", priority: "P4", labels: [], customer: "RWG", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4065" },
+    { key: "PPSUPPORT-3432", summary: "PP Data Issue: casino_player_id in t_session & t_player mismatch", assignee: "Onkar Surendra Anvekar", status: "L3 in progress", priority: "P3", labels: [], customer: "MGM Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3432" },
+    { key: "PPSUPPORT-4119", summary: "Rejected Buyin - Buyin Summited Twice", assignee: "Amarnath Kumar", status: "L3 in progress", priority: "P2", labels: [], customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4119" },
+    { key: "PPSUPPORT-4129", summary: "Fill FL0011261050 sent twice to customer side", assignee: "Vansh Sharma", status: "L3 in progress", priority: "P4", labels: [], customer: "Galaxy", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4129" },
+    { key: "PPSUPPORT-4165", summary: "INC0704495 storage chip issue", assignee: "Daniel Vilar", status: "L3 in progress", priority: "P4", labels: [], customer: "Melco Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-4165", comments: [
       { author: "Tony Leong", created: "2026-06-22 15:44", body: "Storage chip issue after the Melco Production upgrade to PP 2.6.4.2.18." },
       { author: "Tony Leong", created: "2026-06-22 15:43", body: "@Sharad Goel, could you please help arrange for someone to check the storage chip after the Melco Production upgrade to PP 2.6.4.2.18?" }
     ] },
-    { key: "PPSUPPORT-3202", summary: "Perfect cage - One piece of NN20 $10, 000 chip was shown invalid chip", assignee: "Amol Bhaskar Gite", status: "L3 in progress", priority: "P4", customer: "Wynn Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3202", comments: [
+    { key: "PPSUPPORT-3202", summary: "Perfect cage - One piece of NN20 $10, 000 chip was shown invalid chip", assignee: "Amol Bhaskar Gite", status: "L3 in progress", priority: "P4", labels: [], customer: "Wynn Macau", url: "https://wdtablesystems.atlassian.net/browse/PPSUPPORT-3202", comments: [
       { author: "Amol Bhaskar Gite", created: "2026-06-22 14:16", body: "Hi @Luis Abuan, can you please confirm if the below Chip IDs are part of Chip Cache and correspond to a valid chipset label?" },
       { author: "Luis Abuan", created: "2026-06-22 11:54", body: "Hi @Sharad Goel, please kindly help to assign resources to check on this. Thanks." }
     ] }

@@ -66,7 +66,7 @@ async function jiraSearch(jql) {
   const body = {
     jql,
     maxResults: 100,
-    fields: ["summary", "assignee", "status", "statusCategory", "priority", "updated", "comment"]
+    fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment"]
   };
   const response = await fetch(url, {
     method: "POST",
@@ -187,6 +187,7 @@ function mapIssue(issue) {
     status: fields.status?.name || "Unknown",
     statusCategory: fields.status?.statusCategory?.name || fields.statusCategory?.name || "Unknown",
     priority: fields.priority?.name || "Unspecified",
+    labels: fields.labels || [],
     customer: customerFromSummary(fields.summary),
     updated: fields.updated || "",
     url: `${jiraBaseUrl}/browse/${issue.key}`,
@@ -222,12 +223,12 @@ function statusBucket(issue) {
 function computeMetrics(issues) {
   const total = issues.length;
   const statusCounts = { Open: 0, "In Progress": 0, Blocked: 0, Done: 0 };
-  const priorityCounts = { P1: 0, P2: 0, P3: 0, P4: 0 };
+  const priorityCounts = { Top3: 0, P2: 0, P3: 0, P4: 0 };
   const now = Date.now();
 
   for (const issue of issues) {
     statusCounts[statusBucket(issue)] += 1;
-    const priority = priorityBucket(issue.priority);
+    const priority = priorityBucket(issue);
     priorityCounts[priority] += 1;
   }
 
@@ -254,9 +255,11 @@ function computeMetrics(issues) {
   };
 }
 
-function priorityBucket(priorityName) {
-  const priority = String(priorityName || "").toUpperCase();
-  if (priority.includes("P1") || priority.includes("CRITICAL") || priority.includes("HIGHEST")) return "P1";
+function priorityBucket(issue) {
+  const labels = Array.isArray(issue.labels) ? issue.labels : [];
+  if (labels.some((label) => String(label).toLowerCase() === "top3")) return "Top3";
+
+  const priority = String(issue.priority || "").toUpperCase();
   if (priority.includes("P2") || priority.includes("HIGH")) return "P2";
   if (priority.includes("P3") || priority.includes("MEDIUM")) return "P3";
   if (priority.includes("P4") || priority.includes("LOW") || priority.includes("LOWEST")) return "P4";

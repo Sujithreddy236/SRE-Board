@@ -39,7 +39,7 @@ The dashboard calls `/api/sre` for live Jira data on every page load, manual ref
 - SRE `Overview` and `In Progress` tabs sourced from Jira filter `52237`
 - SRE `Releases` tab sourced from configured release Jira filters, grouped by Patch and Hotfix
 - SRE summary cards show only Open and In Progress
-- Priority uses Jira-derived P1, P2, P3, and P4 buckets
+- Priority uses Jira-derived Top3, P2, P3, and P4 buckets. Top3 is based on the Jira issue label `Top3`.
 
 ## Jira Integration Plan
 
