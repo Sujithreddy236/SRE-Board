@@ -104,5 +104,5 @@ The `Patch` tab currently includes:
 The `Hotfix` tab is ready for hotfix release filters when they are provided.
 
 The live API fetches each configured release filter and displays the total Jira ticket count for that release.
-New releases can also be added from the dashboard form by entering release name, type, Jira filter ID or Jira filter link, and release date. Browser-added releases are saved locally and merged into the Releases tab on refresh.
+New releases can also be added from the dashboard form by entering release name, build version, type, Jira filter ID or Jira filter link, and release date. Browser-added releases are saved locally and merged into the Releases tab on refresh.
 Browser-added releases can be removed from the Releases table with the `Delete` action. Built-in releases remain read-only.

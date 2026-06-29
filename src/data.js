@@ -72,6 +72,7 @@ window.SRE_BOARD_DATA = {
     sreReleases: [
       {
         name: "2.6.4.2.21_1",
+        buildVersion: "2.6.4.2.21_1",
         releaseDate: "2026-06-12",
         filterId: "59503",
         type: "patch",
@@ -83,6 +84,7 @@ window.SRE_BOARD_DATA = {
   releases: [
     {
       name: "2.6.4.2.21_1",
+      buildVersion: "2.6.4.2.21_1",
       releaseDate: "2026-06-12",
       filterId: "59503",
       type: "patch",

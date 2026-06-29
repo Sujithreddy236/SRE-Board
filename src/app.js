@@ -155,6 +155,7 @@
     const filterId = extractFilterId(release.filterId);
     return {
       name: String(release.name || "").trim(),
+      buildVersion: String(release.buildVersion || release.name || "").trim(),
       releaseDate: String(release.releaseDate || "").trim(),
       filterId,
       type: String(release.type || "patch").trim(),
@@ -452,6 +453,10 @@
             <input id="releaseNameInput" required placeholder="2.6.4.2.21_2" />
           </label>
           <label>
+            <span>Build version</span>
+            <input id="buildVersionInput" required placeholder="2.6.4.2.21_2" />
+          </label>
+          <label>
             <span>Release type</span>
             <select id="releaseTypeInput">
               ${releaseTypes.map((type) => `<option value="${type.id}">${type.label}</option>`).join("")}
@@ -482,13 +487,14 @@
             <thead>
               <tr>
                 <th>Release Name</th>
+                <th>Build Version</th>
                 <th>Release Date</th>
                 <th>Total Tickets</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              ${visibleReleases.map(releaseRow).join("") || `<tr><td colspan="4" class="empty">No ${releaseTypeLabel(state.releaseType)} releases configured yet</td></tr>`}
+              ${visibleReleases.map(releaseRow).join("") || `<tr><td colspan="5" class="empty">No ${releaseTypeLabel(state.releaseType)} releases configured yet</td></tr>`}
             </tbody>
           </table>
         </div>
@@ -508,6 +514,7 @@
             ${escapeHtml(release.name)}
           </a>
         </td>
+        <td>${escapeHtml(release.buildVersion || release.name)}</td>
         <td>${formatReleaseDate(release.releaseDate)}</td>
         <td><strong>${release.totalTickets ?? 0}</strong></td>
         <td>
@@ -758,6 +765,7 @@
     const form = event.currentTarget;
     const release = normalizeRelease({
       name: document.getElementById("releaseNameInput").value,
+      buildVersion: document.getElementById("buildVersionInput").value,
       type: document.getElementById("releaseTypeInput").value,
       filterId: document.getElementById("releaseFilterInput").value,
       releaseDate: document.getElementById("releaseDateInput").value

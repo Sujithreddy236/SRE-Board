@@ -477,7 +477,7 @@ button {
   box-shadow: 0 14px 34px rgba(23, 23, 23, 0.07);
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(180px, 1.2fr) 150px 150px 170px auto;
+  grid-template-columns: minmax(170px, 1fr) minmax(170px, 1fr) 140px 150px 160px auto;
   padding: 16px;
 }
 
@@ -670,7 +670,7 @@ table {
 }
 
 .release-table {
-  min-width: 620px;
+  min-width: 760px;
 }
 
 .selected-row td {
