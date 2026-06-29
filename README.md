@@ -27,7 +27,7 @@ Open:
 http://localhost:4173
 ```
 
-The dashboard calls `/api/sre` for live Jira data on every page load and refresh, then falls back to the checked-in snapshot if credentials are not configured.
+The dashboard calls `/api/sre` for live Jira data on every page load, manual refresh, and every 20 minutes while open, then falls back to the checked-in snapshot if credentials are not configured.
 
 ## Current Scope
 
@@ -35,7 +35,7 @@ The dashboard calls `/api/sre` for live Jira data on every page load and refresh
 - Summary metrics, status breakdowns, priority views, and issue tables
 - Search and filtering by status and priority
 - Live Jira ingestion through `server.js`
-- Fresh Jira sync for every configured JQL filter on page load and manual refresh
+- Fresh Jira sync for every configured JQL filter on page load, manual refresh, and every 20 minutes
 - SRE `Overview` and `In Progress` tabs sourced from Jira filter `52237`
 - SRE `Releases` tab sourced from configured release Jira filters, grouped by Patch and Hotfix
 - SRE summary cards show only Open and In Progress

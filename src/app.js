@@ -849,4 +849,5 @@
 
   render();
   refreshLiveData();
+  setInterval(refreshLiveData, 20 * 60 * 1000);
 })();
