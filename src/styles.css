@@ -293,12 +293,6 @@ button.metric-card {
   margin-bottom: 16px;
 }
 
-.architecture-dropdown-card {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-
 .architecture-summary-card {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid var(--wdts-line);
@@ -316,6 +310,8 @@ button.metric-card {
 
 .architecture-dropdown {
   animation: dropdownIn 150ms ease-out;
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 
 .architecture-dropdown .panel,
@@ -333,7 +329,7 @@ button.metric-card {
 }
 
 .architecture-dropdown table {
-  min-width: 0;
+  min-width: 920px;
 }
 
 .architecture-dropdown th,

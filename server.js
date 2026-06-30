@@ -11,6 +11,8 @@ const jiraFilterId = process.env.JIRA_FILTER_ID || "52237";
 const architectureFilterId = process.env.ARCHITECTURE_FILTER_ID || "59446";
 const architectureStoryFilterId = process.env.ARCHITECTURE_STORY_FILTER_ID || "59445";
 const architectureBugFilterId = process.env.ARCHITECTURE_BUG_FILTER_ID || "59624";
+const jiraEndDateField = process.env.JIRA_END_DATE_FIELD || "customfield_17741";
+const jiraPlannedEndDateField = process.env.JIRA_PLANNED_END_DATE_FIELD || "customfield_17747";
 const jiraEmail = process.env.JIRA_EMAIL;
 const jiraToken = process.env.JIRA_API_TOKEN;
 const releaseFilters = [
@@ -74,7 +76,7 @@ async function jiraSearch(jql) {
     const body = {
       jql,
       maxResults: 100,
-      fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment", "issuetype"]
+      fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment", "issuetype", "duedate", jiraEndDateField, jiraPlannedEndDateField]
     };
     if (nextPageToken) body.nextPageToken = nextPageToken;
 
@@ -208,6 +210,7 @@ function mapIssue(issue) {
     priority: fields.priority?.name || "Unspecified",
     type: fields.issuetype?.name || "Issue",
     labels: fields.labels || [],
+    endDate: fields[jiraEndDateField] || fields[jiraPlannedEndDateField] || fields.duedate || "",
     customer: customerFromSummary(fields.summary),
     updated: fields.updated || "",
     url: `${jiraBaseUrl}/browse/${issue.key}`,

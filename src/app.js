@@ -14,7 +14,7 @@
     priority: "All",
     assignee: "All",
     releaseType: "patch",
-    architectureDetailView: "active",
+    architectureDetailView: "",
     selectedIssueKey: "",
     query: ""
   };
@@ -471,49 +471,41 @@
   function renderArchitectureDashboard(team) {
     const metrics = team.metrics || snapshotArchitectureMetrics();
     const architectureIssues = source.architectureIssues || [];
-    const filter = source.jiraFilters.architecture;
     const activeProjects = architectureIssues.filter(isActiveArchitectureProject);
     const inactiveProjects = architectureIssues.filter(isInactiveArchitectureProject);
+    const activeDetail = renderArchitectureProjectDetails("Active Projects", activeProjects);
+    const inactiveDetail = renderArchitectureProjectDetails("Inactive Projects", inactiveProjects);
+    const storyDetail = statusTablePanel("Story Status", metrics.storyStatusCounts || {}, metrics.totalStories || 0);
+    const bugDetail = statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0);
 
     return `
       <section class="architecture-card-grid" aria-label="Architecture metrics">
-        ${architectureDropdownCard({
-          view: "active",
-          label: "Active Projects",
-          value: metrics.activeProjects || 0,
-          content: renderArchitectureProjectDetails("Active Projects", activeProjects, filter)
-        })}
-        ${architectureDropdownCard({
-          view: "inactive",
-          label: "Inactive Projects",
-          value: metrics.inactiveProjects || 0,
-          content: renderArchitectureProjectDetails("Inactive Projects", inactiveProjects, filter)
-        })}
-        ${architectureDropdownCard({
-          view: "stories",
-          label: "Story Status",
-          value: metrics.totalStories || 0,
-          content: statusTablePanel("Story Status", metrics.storyStatusCounts || {}, metrics.totalStories || 0)
-        })}
-        ${architectureDropdownCard({
-          view: "bugs",
-          label: "Bug Status",
-          value: metrics.totalBugs || 0,
-          content: statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0)
-        })}
+        ${architectureSummaryCard("active", "Active Projects", metrics.activeProjects || 0)}
+        ${architectureSummaryCard("inactive", "Inactive Projects", metrics.inactiveProjects || 0)}
+        ${renderArchitectureDropdown("active", activeDetail)}
+        ${renderArchitectureDropdown("inactive", inactiveDetail)}
+        ${architectureSummaryCard("stories", "Story Status", metrics.totalStories || 0)}
+        ${architectureSummaryCard("bugs", "Bug Status", metrics.totalBugs || 0)}
+        ${renderArchitectureDropdown("stories", storyDetail)}
+        ${renderArchitectureDropdown("bugs", bugDetail)}
       </section>
     `;
   }
 
-  function architectureDropdownCard({ view, label, value, content }) {
-    const active = state.architectureDetailView === view;
+  function architectureSummaryCard(view, label, value) {
     return `
-      <div class="architecture-dropdown-card">
-        <button class="metric-card architecture-summary-card ${active ? "active" : ""}" data-architecture-detail-view="${view}">
-          <span>${label}</span>
-          <strong>${value}</strong>
-        </button>
-        ${active ? `<div class="architecture-dropdown">${content}</div>` : ""}
+      <button class="metric-card architecture-summary-card ${state.architectureDetailView === view ? "active" : ""}" data-architecture-detail-view="${view}">
+        <span>${label}</span>
+        <strong>${value}</strong>
+      </button>
+    `;
+  }
+
+  function renderArchitectureDropdown(view, content) {
+    if (state.architectureDetailView !== view) return "";
+    return `
+      <div class="architecture-dropdown">
+        ${content}
       </div>
     `;
   }
@@ -546,15 +538,13 @@
     `;
   }
 
-  function renderArchitectureProjectDetails(title, issues, filter) {
+  function renderArchitectureProjectDetails(title, issues) {
     return `
       <section class="work-area architecture-detail-area">
         <div class="jira-strip">
           <div>
             <strong>${title}</strong>
-            <p>${filter.jql}</p>
           </div>
-          <a href="${filter.sourceUrl}" target="_blank" rel="noreferrer">Open in Jira</a>
         </div>
         <div class="table-shell">
           <table>
@@ -566,7 +556,7 @@
                 <th>Status</th>
                 <th>Priority</th>
                 <th>Assignee</th>
-                <th>Updated</th>
+                <th>End Date</th>
               </tr>
             </thead>
             <tbody>
@@ -589,7 +579,7 @@
         <td><span class="pill status-${slug(issue.status)}">${escapeHtml(issue.status)}</span></td>
         <td>${escapeHtml(issue.priority)}</td>
         <td>${escapeHtml(issue.assignee)}</td>
-        <td>${formatUpdatedDate(issue.updated)}</td>
+        <td>${formatEndDate(issue.endDate)}</td>
       </tr>
     `;
   }
@@ -746,6 +736,13 @@
     return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   }
 
+  function formatEndDate(value) {
+    if (!value) return "";
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return escapeHtml(value);
+    return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
   function renderSreJiraTab(issues, assignees, tabIssues) {
     const filter = source.jiraFilters.sreInProgress;
     const title = state.tab === "in-progress" ? "L3 in progress" : `Jira filter ${filter.filterId}`;
@@ -893,7 +890,7 @@
         state.priority = "All";
         state.assignee = "All";
         state.releaseType = "patch";
-        state.architectureDetailView = "active";
+        state.architectureDetailView = "";
         state.selectedIssueKey = "";
         state.query = "";
         render();
@@ -927,7 +924,9 @@
 
     document.querySelectorAll("[data-architecture-detail-view]").forEach((button) => {
       button.addEventListener("click", () => {
-        state.architectureDetailView = button.dataset.architectureDetailView;
+        state.architectureDetailView = state.architectureDetailView === button.dataset.architectureDetailView
+          ? ""
+          : button.dataset.architectureDetailView;
         render();
       });
     });
