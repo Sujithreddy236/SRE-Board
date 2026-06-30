@@ -110,10 +110,12 @@ Browser-added releases can be removed from the Releases table with the `Delete` 
 
 ## Architecture Jira Board
 
-The Architecture workspace uses:
+The Architecture workspace uses separate Jira filters:
 
 ```jql
-filter = 59446 ORDER BY updated DESC
+Epics: filter = 59446 ORDER BY updated DESC
+Stories: filter = 59445 ORDER BY updated DESC
+Bugs: filter = 59624 ORDER BY updated DESC
 ```
 
 Project cards are counted from Jira Epics:
@@ -121,4 +123,4 @@ Project cards are counted from Jira Epics:
 - Active Projects: Epic status is not `Open`, `To Do`, `Released`, `Canceled`, or `Deferred`
 - Inactive Projects: Epic status is `Open`, `To Do`, or `Canceled`
 
-The board also shows Story and Bug status-count tables when those issue types are returned by the filter. Clicking Active Projects or Inactive Projects opens the matching Epic detail table.
+The board shows Story and Bug status-count tables from their dedicated filters. Clicking Active Projects or Inactive Projects opens the matching Epic detail table.

@@ -9,6 +9,8 @@ const port = Number(process.env.PORT || 4173);
 const jiraBaseUrl = process.env.JIRA_BASE_URL || "https://wdtablesystems.atlassian.net";
 const jiraFilterId = process.env.JIRA_FILTER_ID || "52237";
 const architectureFilterId = process.env.ARCHITECTURE_FILTER_ID || "59446";
+const architectureStoryFilterId = process.env.ARCHITECTURE_STORY_FILTER_ID || "59445";
+const architectureBugFilterId = process.env.ARCHITECTURE_BUG_FILTER_ID || "59624";
 const jiraEmail = process.env.JIRA_EMAIL;
 const jiraToken = process.env.JIRA_API_TOKEN;
 const releaseFilters = [
@@ -64,27 +66,43 @@ function authHeader() {
 
 async function jiraSearch(jql) {
   const url = `${jiraBaseUrl}/rest/api/3/search/jql`;
-  const body = {
-    jql,
-    maxResults: 100,
-    fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment", "issuetype"]
+  const issues = [];
+  let nextPageToken = "";
+  let latestPage = {};
+
+  do {
+    const body = {
+      jql,
+      maxResults: 100,
+      fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment", "issuetype"]
+    };
+    if (nextPageToken) body.nextPageToken = nextPageToken;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": authHeader(),
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Jira returned ${response.status}: ${text.slice(0, 500)}`);
+    }
+
+    latestPage = await response.json();
+    issues.push(...(latestPage.issues || []));
+    nextPageToken = latestPage.nextPageToken || "";
+  } while (nextPageToken);
+
+  return {
+    ...latestPage,
+    issues,
+    total: latestPage.total ?? issues.length
   };
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": authHeader(),
-      "Accept": "application/json",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Jira returned ${response.status}: ${text.slice(0, 500)}`);
-  }
-
-  return response.json();
 }
 
 function releaseSourceUrl(filterId) {
@@ -223,12 +241,12 @@ function countByStatus(issues) {
   }, {});
 }
 
-function computeArchitectureMetrics(issues) {
+function computeArchitectureMetrics(projectIssues, storyIssues = [], bugIssues = []) {
   const inactiveStatuses = new Set(["open", "to do", "canceled", "cancelled"]);
   const excludedActiveStatuses = new Set(["open", "to do", "released", "canceled", "cancelled", "deferred"]);
-  const epics = issues.filter((issue) => typeIs(issue, "Epic"));
-  const stories = issues.filter((issue) => typeIs(issue, "Story"));
-  const bugs = issues.filter((issue) => typeIs(issue, "Bug"));
+  const epics = projectIssues.filter((issue) => typeIs(issue, "Epic"));
+  const stories = storyIssues.filter((issue) => typeIs(issue, "Story"));
+  const bugs = bugIssues.filter((issue) => typeIs(issue, "Bug"));
 
   const activeProjects = epics.filter((issue) => !excludedActiveStatuses.has(String(issue.status || "").toLowerCase())).length;
   const inactiveProjects = epics.filter((issue) => inactiveStatuses.has(String(issue.status || "").toLowerCase())).length;
@@ -241,7 +259,7 @@ function computeArchitectureMetrics(issues) {
     bugStatusCounts: countByStatus(bugs),
     totalStories: stories.length,
     totalBugs: bugs.length,
-    total: issues.length
+    total: projectIssues.length + storyIssues.length + bugIssues.length
   };
 }
 
@@ -306,6 +324,8 @@ function configuredJiraSyncs() {
   const allJql = `filter = ${jiraFilterId} ORDER BY updated DESC`;
   const l3Jql = `filter = ${jiraFilterId} AND status = "L3 in progress" ORDER BY updated DESC`;
   const architectureJql = `filter = ${architectureFilterId} ORDER BY updated DESC`;
+  const architectureStoriesJql = `filter = ${architectureStoryFilterId} ORDER BY updated DESC`;
+  const architectureBugsJql = `filter = ${architectureBugFilterId} ORDER BY updated DESC`;
   return {
     overview: {
       filterId: jiraFilterId,
@@ -321,6 +341,16 @@ function configuredJiraSyncs() {
       filterId: architectureFilterId,
       jql: architectureJql,
       sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureFilterId}`
+    },
+    architectureStories: {
+      filterId: architectureStoryFilterId,
+      jql: architectureStoriesJql,
+      sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureStoryFilterId}`
+    },
+    architectureBugs: {
+      filterId: architectureBugFilterId,
+      jql: architectureBugsJql,
+      sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureBugFilterId}`
     },
     releases: releaseFilters.map((release) => ({
       ...release,
@@ -345,15 +375,21 @@ async function handleSreApi(res) {
   const allJql = syncs.overview.jql;
   const l3Jql = syncs.inProgress.jql;
   const architectureJql = syncs.architecture.jql;
-  const [allResult, l3Result, architectureResult, releases] = await Promise.all([
+  const architectureStoriesJql = syncs.architectureStories.jql;
+  const architectureBugsJql = syncs.architectureBugs.jql;
+  const [allResult, l3Result, architectureResult, architectureStoriesResult, architectureBugsResult, releases] = await Promise.all([
     jiraSearch(allJql),
     jiraSearch(l3Jql),
     jiraSearch(architectureJql),
+    jiraSearch(architectureStoriesJql),
+    jiraSearch(architectureBugsJql),
     Promise.all(releaseFilters.map(fetchRelease))
   ]);
   const issues = (allResult.issues || []).map(mapIssue);
   const l3Issues = (l3Result.issues || []).map(mapIssue);
   const architectureIssues = (architectureResult.issues || []).map(mapIssue);
+  const architectureStoryIssues = (architectureStoriesResult.issues || []).map(mapIssue);
+  const architectureBugIssues = (architectureBugsResult.issues || []).map(mapIssue);
 
   send(res, 200, JSON.stringify({
     fetchedAt: new Date().toISOString(),
@@ -373,6 +409,18 @@ async function handleSreApi(res) {
         jql: architectureJql,
         sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureFilterId}`
       },
+      architectureStories: {
+        cloudUrl: jiraBaseUrl,
+        filterId: architectureStoryFilterId,
+        jql: architectureStoriesJql,
+        sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureStoryFilterId}`
+      },
+      architectureBugs: {
+        cloudUrl: jiraBaseUrl,
+        filterId: architectureBugFilterId,
+        jql: architectureBugsJql,
+        sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureBugFilterId}`
+      },
       sreReleases: releaseFilters.map((release) => ({
         ...release,
         jql: `filter = ${release.filterId} ORDER BY updated DESC`,
@@ -380,10 +428,12 @@ async function handleSreApi(res) {
       }))
     },
     metrics: computeMetrics(issues),
-    architectureMetrics: computeArchitectureMetrics(architectureIssues),
+    architectureMetrics: computeArchitectureMetrics(architectureIssues, architectureStoryIssues, architectureBugIssues),
     sreFilterIssues: issues,
     sreL3Issues: l3Issues,
     architectureIssues,
+    architectureStoryIssues,
+    architectureBugIssues,
     releases
   }));
 }

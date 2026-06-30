@@ -38,6 +38,8 @@
     source.sreFilterIssues = payload.sreFilterIssues;
     source.sreL3Issues = payload.sreL3Issues || payload.sreFilterIssues.filter((issue) => issue.status === "L3 in progress");
     source.architectureIssues = payload.architectureIssues || source.architectureIssues || [];
+    source.architectureStoryIssues = payload.architectureStoryIssues || source.architectureStoryIssues || [];
+    source.architectureBugIssues = payload.architectureBugIssues || source.architectureBugIssues || [];
     source.releases = mergeReleases(payload.releases || [], getStoredReleases());
     source.jiraFilters = { ...source.jiraFilters, ...payload.jiraFilters };
     const sreTeam = source.teams.find((team) => team.id === "sre");
@@ -261,11 +263,13 @@
 
   function snapshotArchitectureMetrics() {
     const issues = source.architectureIssues || [];
+    const storyIssues = source.architectureStoryIssues || [];
+    const bugIssues = source.architectureBugIssues || [];
     const inactiveStatuses = new Set(["open", "to do", "canceled", "cancelled"]);
     const excludedActiveStatuses = new Set(["open", "to do", "released", "canceled", "cancelled", "deferred"]);
     const epics = issues.filter((issue) => issueTypeIs(issue, "Epic"));
-    const stories = issues.filter((issue) => issueTypeIs(issue, "Story"));
-    const bugs = issues.filter((issue) => issueTypeIs(issue, "Bug"));
+    const stories = storyIssues.filter((issue) => issueTypeIs(issue, "Story"));
+    const bugs = bugIssues.filter((issue) => issueTypeIs(issue, "Bug"));
     return {
       activeProjects: epics.filter((issue) => !excludedActiveStatuses.has(String(issue.status || "").toLowerCase())).length,
       inactiveProjects: epics.filter((issue) => inactiveStatuses.has(String(issue.status || "").toLowerCase())).length,
@@ -274,7 +278,7 @@
       bugStatusCounts: countStatuses(bugs),
       totalStories: stories.length,
       totalBugs: bugs.length,
-      total: issues.length
+      total: issues.length + storyIssues.length + bugIssues.length
     };
   }
 

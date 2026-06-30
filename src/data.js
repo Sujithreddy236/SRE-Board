@@ -75,6 +75,18 @@ window.SRE_BOARD_DATA = {
       jql: "filter = 59446 ORDER BY updated DESC",
       sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59446"
     },
+    architectureStories: {
+      cloudUrl: "https://wdtablesystems.atlassian.net",
+      filterId: "59445",
+      jql: "filter = 59445 ORDER BY updated DESC",
+      sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59445"
+    },
+    architectureBugs: {
+      cloudUrl: "https://wdtablesystems.atlassian.net",
+      filterId: "59624",
+      jql: "filter = 59624 ORDER BY updated DESC",
+      sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59624"
+    },
     sreReleases: [
       {
         name: "2.6.4.2.21_1",
@@ -116,9 +128,13 @@ window.SRE_BOARD_DATA = {
     { key: "ARCH-204", summary: "Event streaming reference architecture", assignee: "Meera", status: "In Progress", priority: "High", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-21", url: "https://wdtablesystems.atlassian.net/browse/ARCH-204" },
     { key: "ARCH-219", summary: "API governance checklist", assignee: "Dev", status: "Open", priority: "Medium", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-17", url: "https://wdtablesystems.atlassian.net/browse/ARCH-219" },
     { key: "ARCH-226", summary: "Legacy auth migration dependency", assignee: "Leela", status: "Canceled", priority: "High", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-20", url: "https://wdtablesystems.atlassian.net/browse/ARCH-226" },
-    { key: "ARCH-242", summary: "Data retention standards", assignee: "Arjun", status: "Released", priority: "Medium", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-14", url: "https://wdtablesystems.atlassian.net/browse/ARCH-242" },
+    { key: "ARCH-242", summary: "Data retention standards", assignee: "Arjun", status: "Released", priority: "Medium", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-14", url: "https://wdtablesystems.atlassian.net/browse/ARCH-242" }
+  ],
+  architectureStoryIssues: [
     { key: "ARCH-251", summary: "Document streaming failover pattern", assignee: "Meera", status: "In Progress", priority: "Medium", type: "Story", labels: [], customer: "Architecture", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-251" },
-    { key: "ARCH-252", summary: "Review API naming standards", assignee: "Dev", status: "Open", priority: "Low", type: "Story", labels: [], customer: "Architecture", updated: "2026-06-19", url: "https://wdtablesystems.atlassian.net/browse/ARCH-252" },
+    { key: "ARCH-252", summary: "Review API naming standards", assignee: "Dev", status: "Open", priority: "Low", type: "Story", labels: [], customer: "Architecture", updated: "2026-06-19", url: "https://wdtablesystems.atlassian.net/browse/ARCH-252" }
+  ],
+  architectureBugIssues: [
     { key: "ARCH-260", summary: "Architecture board status mismatch", assignee: "Leela", status: "Open", priority: "High", type: "Bug", labels: [], customer: "Architecture", updated: "2026-06-23", url: "https://wdtablesystems.atlassian.net/browse/ARCH-260" },
     { key: "ARCH-261", summary: "Reference diagram link missing", assignee: "Arjun", status: "In Progress", priority: "Medium", type: "Bug", labels: [], customer: "Architecture", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-261" }
   ],
