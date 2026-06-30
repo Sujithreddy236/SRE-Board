@@ -32,6 +32,11 @@ button {
   cursor: pointer;
 }
 
+button.metric-card {
+  text-align: left;
+  width: 100%;
+}
+
 .shell {
   min-height: 100vh;
   display: flex;
@@ -282,6 +287,21 @@ button {
 .metric-card {
   min-height: 126px;
   padding: 18px;
+}
+
+.architecture-project-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--wdts-line);
+}
+
+.architecture-project-card:hover,
+.architecture-project-card.active {
+  border-color: var(--wdts-red);
+  box-shadow: 0 16px 36px rgba(166, 25, 46, 0.14);
+}
+
+.architecture-project-card.active {
+  background: #fff7f8;
 }
 
 .metric-card span {

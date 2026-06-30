@@ -14,6 +14,7 @@
     priority: "All",
     assignee: "All",
     releaseType: "patch",
+    architectureProjectView: "active",
     selectedIssueKey: "",
     query: ""
   };
@@ -277,6 +278,16 @@
     };
   }
 
+  function isActiveArchitectureProject(issue) {
+    const excludedActiveStatuses = new Set(["open", "to do", "released", "canceled", "cancelled", "deferred"]);
+    return issueTypeIs(issue, "Epic") && !excludedActiveStatuses.has(String(issue.status || "").toLowerCase());
+  }
+
+  function isInactiveArchitectureProject(issue) {
+    const inactiveStatuses = new Set(["open", "to do", "canceled", "cancelled"]);
+    return issueTypeIs(issue, "Epic") && inactiveStatuses.has(String(issue.status || "").toLowerCase());
+  }
+
   function issueTypeIs(issue, expected) {
     return String(issue.type || "").toLowerCase() === expected.toLowerCase();
   }
@@ -456,14 +467,16 @@
   function renderArchitectureDashboard(team) {
     const metrics = team.metrics || snapshotArchitectureMetrics();
     const architectureIssues = source.architectureIssues || [];
-    const filteredIssues = getArchitectureIssues();
-    const searchActive = state.tab === "search";
     const filter = source.jiraFilters.architecture;
+    const activeProjects = architectureIssues.filter(isActiveArchitectureProject);
+    const inactiveProjects = architectureIssues.filter(isInactiveArchitectureProject);
+    const visibleProjects = state.architectureProjectView === "inactive" ? inactiveProjects : activeProjects;
+    const detailTitle = state.architectureProjectView === "inactive" ? "Inactive Projects" : "Active Projects";
 
     return `
       <section class="metrics-grid architecture-metrics" aria-label="Architecture project metrics">
-        ${metricCard("Active Projects", metrics.activeProjects || 0, "Epic status not Open, To Do, Released, Canceled, or Deferred")}
-        ${metricCard("Inactive Projects", metrics.inactiveProjects || 0, "Epic status Open, To Do, or Canceled")}
+        ${architectureProjectCard("active", "Active Projects", metrics.activeProjects || 0)}
+        ${architectureProjectCard("inactive", "Inactive Projects", metrics.inactiveProjects || 0)}
       </section>
 
       <section class="architecture-status-grid">
@@ -471,16 +484,16 @@
         ${statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0)}
       </section>
 
-      <div class="tabs" role="tablist" aria-label="Architecture dashboard tabs">
-        <button class="tab-button ${!searchActive ? "active" : ""}" data-tab="overview" role="tab">
-          Overview
-        </button>
-        <button class="tab-button ${searchActive ? "active" : ""}" data-tab="search" role="tab">
-          Search <span>${architectureIssues.length}</span>
-        </button>
-      </div>
+      ${renderArchitectureProjectDetails(detailTitle, visibleProjects, filter)}
+    `;
+  }
 
-      ${searchActive ? renderArchitectureSearch(filteredIssues, architectureIssues, filter) : ""}
+  function architectureProjectCard(view, label, value) {
+    return `
+      <button class="metric-card architecture-project-card ${state.architectureProjectView === view ? "active" : ""}" data-architecture-project-view="${view}">
+        <span>${label}</span>
+        <strong>${value}</strong>
+      </button>
     `;
   }
 
@@ -512,25 +525,15 @@
     `;
   }
 
-  function renderArchitectureSearch(issues, allIssues, filter) {
-    const statuses = uniqueValues(allIssues, "status");
-    const priorities = uniqueValues(allIssues, "priority");
+  function renderArchitectureProjectDetails(title, issues, filter) {
     return `
       <section class="work-area">
         <div class="jira-strip">
           <div>
-            <strong>Architecture filter ${filter.filterId}</strong>
+            <strong>${title}</strong>
             <p>${filter.jql}</p>
           </div>
           <a href="${filter.sourceUrl}" target="_blank" rel="noreferrer">Open in Jira</a>
-        </div>
-        <div class="filters">
-          <label>
-            <span>Search</span>
-            <input id="searchInput" value="${escapeHtml(state.query)}" placeholder="Jira Id, assignee, type" />
-          </label>
-          ${selectControl("statusFilter", "Status", ["All", ...statuses], state.status)}
-          ${selectControl("priorityFilter", "Priority", ["All", ...priorities], state.priority)}
         </div>
         <div class="table-shell">
           <table>
@@ -546,7 +549,7 @@
               </tr>
             </thead>
             <tbody>
-              ${issues.map(architectureIssueRow).join("") || `<tr><td colspan="7" class="empty">No matching Jira issues</td></tr>`}
+              ${issues.map(architectureIssueRow).join("") || `<tr><td colspan="7" class="empty">No matching projects</td></tr>`}
             </tbody>
           </table>
         </div>
@@ -568,10 +571,6 @@
         <td>${formatUpdatedDate(issue.updated)}</td>
       </tr>
     `;
-  }
-
-  function uniqueValues(items, field) {
-    return [...new Set(items.map((item) => item[field]).filter(Boolean))].sort();
   }
 
   function metricCard(label, value, caption) {
@@ -873,6 +872,7 @@
         state.priority = "All";
         state.assignee = "All";
         state.releaseType = "patch";
+        state.architectureProjectView = "active";
         state.selectedIssueKey = "";
         state.query = "";
         render();
@@ -900,6 +900,13 @@
     document.querySelectorAll("[data-release-type]").forEach((button) => {
       button.addEventListener("click", () => {
         state.releaseType = button.dataset.releaseType;
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-architecture-project-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.architectureProjectView = button.dataset.architectureProjectView;
         render();
       });
     });
@@ -1011,7 +1018,9 @@
 
   function exportJson() {
     const team = getTeam();
-    const exportIssues = team.id === "architecture" ? getArchitectureIssues() : getFilteredIssues();
+    const exportIssues = team.id === "architecture"
+      ? (source.architectureIssues || []).filter(state.architectureProjectView === "inactive" ? isInactiveArchitectureProject : isActiveArchitectureProject)
+      : getFilteredIssues();
     const payload = {
       team: team.name,
       exportedAt: new Date().toISOString(),

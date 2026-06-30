@@ -121,4 +121,4 @@ Project cards are counted from Jira Epics:
 - Active Projects: Epic status is not `Open`, `To Do`, `Released`, `Canceled`, or `Deferred`
 - Inactive Projects: Epic status is `Open`, `To Do`, or `Canceled`
 
-The board also shows Story and Bug status-count tables when those issue types are returned by the filter. The `Search` tab keeps a searchable Jira issue table for the same filter.
+The board also shows Story and Bug status-count tables when those issue types are returned by the filter. Clicking Active Projects or Inactive Projects opens the matching Epic detail table.
