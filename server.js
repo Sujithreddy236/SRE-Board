@@ -76,7 +76,7 @@ async function jiraSearch(jql) {
     const body = {
       jql,
       maxResults: 100,
-      fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment", "issuetype", "duedate", jiraEndDateField, jiraPlannedEndDateField]
+      fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment", "issuetype", "duedate", "parent", jiraEndDateField, jiraPlannedEndDateField]
     };
     if (nextPageToken) body.nextPageToken = nextPageToken;
 
@@ -211,6 +211,10 @@ function mapIssue(issue) {
     type: fields.issuetype?.name || "Issue",
     labels: fields.labels || [],
     endDate: fields[jiraEndDateField] || fields[jiraPlannedEndDateField] || fields.duedate || "",
+    dueDate: fields.duedate || "",
+    parent: fields.parent?.key || "",
+    parentSummary: fields.parent?.fields?.summary || "",
+    parentUrl: fields.parent?.key ? `${jiraBaseUrl}/browse/${fields.parent.key}` : "",
     customer: customerFromSummary(fields.summary),
     updated: fields.updated || "",
     url: `${jiraBaseUrl}/browse/${issue.key}`,

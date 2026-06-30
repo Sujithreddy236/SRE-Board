@@ -342,6 +342,36 @@ button.metric-card {
   min-width: 180px;
 }
 
+.status-drilldown-button {
+  background: transparent;
+  border: 0;
+  color: var(--wdts-red);
+  font-weight: 800;
+  padding: 0;
+  text-align: left;
+}
+
+.status-drilldown-button:hover {
+  text-decoration: underline;
+}
+
+.status-detail-table {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.status-detail-heading {
+  color: var(--wdts-black);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.architecture-story-table,
+.architecture-bug-table {
+  min-width: 760px;
+}
+
 @keyframes dropdownIn {
   from {
     opacity: 0;

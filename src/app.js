@@ -15,12 +15,27 @@
     assignee: "All",
     releaseType: "patch",
     architectureDetailView: "",
+    architectureStatusType: "",
+    architectureStatus: "",
     selectedIssueKey: "",
     query: ""
   };
 
   const statusOrder = ["Open", "In Progress", "Blocked", "Done"];
   const priorityOrder = ["Top3", "P2", "P3", "P4"];
+  const architectureStoryStatusOrder = [
+    "Backlog",
+    "Assigned",
+    "Designated to team",
+    "Dev in progress",
+    "Implementation",
+    "Design",
+    "Design Review",
+    "Development Complete",
+    "In Test",
+    "Done"
+  ];
+  const architectureBugStatusOrder = ["Backlog", "Assigned", "In Test", "Design Review", "Done"];
   const releaseTypes = [
     { id: "patch", label: "Patch" },
     { id: "hotfix", label: "Hotfix" }
@@ -471,12 +486,14 @@
   function renderArchitectureDashboard(team) {
     const metrics = team.metrics || snapshotArchitectureMetrics();
     const architectureIssues = source.architectureIssues || [];
+    const storyIssues = source.architectureStoryIssues || [];
+    const bugIssues = source.architectureBugIssues || [];
     const activeProjects = architectureIssues.filter(isActiveArchitectureProject);
     const inactiveProjects = architectureIssues.filter(isInactiveArchitectureProject);
     const activeDetail = renderArchitectureProjectDetails("Active Projects", activeProjects);
     const inactiveDetail = renderArchitectureProjectDetails("Inactive Projects", inactiveProjects);
-    const storyDetail = statusTablePanel("Story Status", metrics.storyStatusCounts || {}, metrics.totalStories || 0);
-    const bugDetail = statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0);
+    const storyDetail = statusTablePanel("Story Status", metrics.storyStatusCounts || {}, metrics.totalStories || 0, "stories", architectureStoryStatusOrder, storyIssues);
+    const bugDetail = statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0, "bugs", architectureBugStatusOrder, bugIssues);
 
     return `
       <section class="architecture-card-grid" aria-label="Architecture metrics">
@@ -510,8 +527,8 @@
     `;
   }
 
-  function statusTablePanel(title, counts, total) {
-    const rows = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
+  function statusTablePanel(title, counts, total, type = "", order = [], issues = []) {
+    const rows = orderedStatusRows(counts, order);
     return `
       <div class="panel status-table-panel">
         <div class="panel-heading">
@@ -526,16 +543,98 @@
             </tr>
           </thead>
           <tbody>
-            ${rows.map(([status, count]) => `
-              <tr>
-                <td>${escapeHtml(status)}</td>
+            ${rows.map(({ status, label, count }) => `
+              <tr class="${state.architectureStatusType === type && sameStatus(state.architectureStatus, status) ? "selected-row" : ""}">
+                <td>
+                  ${type ? `
+                    <button class="status-drilldown-button" data-architecture-status-type="${type}" data-architecture-status="${escapeHtml(status)}">
+                      ${escapeHtml(label)}
+                    </button>
+                  ` : escapeHtml(label)}
+                </td>
                 <td><strong>${count}</strong></td>
               </tr>
             `).join("") || `<tr><td colspan="2" class="empty">No issues found</td></tr>`}
           </tbody>
         </table>
+        ${type && state.architectureStatusType === type && state.architectureStatus
+          ? renderArchitectureStatusDetails(type, state.architectureStatus, issues)
+          : ""}
       </div>
     `;
+  }
+
+  function orderedStatusRows(counts, order) {
+    const entries = Object.entries(counts);
+    const used = new Set();
+    const ordered = order
+      .map((label) => {
+        const match = entries.find(([status]) => normalizeStatus(status) === normalizeStatus(label));
+        if (!match) return null;
+        used.add(normalizeStatus(match[0]));
+        return { status: match[0], label, count: match[1] };
+      })
+      .filter(Boolean);
+    const remaining = entries
+      .filter(([status]) => !used.has(normalizeStatus(status)))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([status, count]) => ({ status, label: status, count }));
+    return [...ordered, ...remaining];
+  }
+
+  function renderArchitectureStatusDetails(type, status, issues) {
+    const visibleIssues = issues.filter((issue) => sameStatus(issue.status, status));
+    const isBug = type === "bugs";
+    return `
+      <div class="status-detail-table">
+        <div class="status-detail-heading">${escapeHtml(status)} tickets</div>
+        <div class="table-shell">
+          <table class="${isBug ? "architecture-bug-table" : "architecture-story-table"}">
+            <thead>
+              <tr>
+                <th>Jira Id</th>
+                <th>Summary</th>
+                <th>Assignee</th>
+                <th>${isBug ? "Parent" : "Due Date"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${visibleIssues.map((issue) => isBug ? architectureBugRow(issue) : architectureStoryRow(issue)).join("") || `<tr><td colspan="4" class="empty">No matching tickets</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function architectureStoryRow(issue) {
+    return `
+      <tr>
+        <td><a class="jira-link" href="${issue.url}" target="_blank" rel="noreferrer">${escapeHtml(issue.key)}</a></td>
+        <td>${escapeHtml(issue.summary)}</td>
+        <td>${escapeHtml(issue.assignee)}</td>
+        <td>${formatEndDate(issue.dueDate)}</td>
+      </tr>
+    `;
+  }
+
+  function architectureBugRow(issue) {
+    return `
+      <tr>
+        <td><a class="jira-link" href="${issue.url}" target="_blank" rel="noreferrer">${escapeHtml(issue.key)}</a></td>
+        <td>${escapeHtml(issue.summary)}</td>
+        <td>${escapeHtml(issue.assignee)}</td>
+        <td>${issue.parentUrl ? `<a class="jira-link" href="${issue.parentUrl}" target="_blank" rel="noreferrer">${escapeHtml(issue.parent)}</a>` : escapeHtml(issue.parent || "")}</td>
+      </tr>
+    `;
+  }
+
+  function normalizeStatus(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function sameStatus(a, b) {
+    return normalizeStatus(a) === normalizeStatus(b);
   }
 
   function renderArchitectureProjectDetails(title, issues) {
@@ -891,6 +990,8 @@
         state.assignee = "All";
         state.releaseType = "patch";
         state.architectureDetailView = "";
+        state.architectureStatusType = "";
+        state.architectureStatus = "";
         state.selectedIssueKey = "";
         state.query = "";
         render();
@@ -927,6 +1028,19 @@
         state.architectureDetailView = state.architectureDetailView === button.dataset.architectureDetailView
           ? ""
           : button.dataset.architectureDetailView;
+        state.architectureStatusType = "";
+        state.architectureStatus = "";
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-architecture-status-type]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.architectureStatusType;
+        const status = button.dataset.architectureStatus;
+        const alreadySelected = state.architectureStatusType === type && sameStatus(state.architectureStatus, status);
+        state.architectureStatusType = alreadySelected ? "" : type;
+        state.architectureStatus = alreadySelected ? "" : status;
         render();
       });
     });

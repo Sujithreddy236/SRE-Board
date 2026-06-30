@@ -131,12 +131,12 @@ window.SRE_BOARD_DATA = {
     { key: "ARCH-242", summary: "Data retention standards", assignee: "Arjun", status: "Released", priority: "Medium", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-14", url: "https://wdtablesystems.atlassian.net/browse/ARCH-242" }
   ],
   architectureStoryIssues: [
-    { key: "ARCH-251", summary: "Document streaming failover pattern", assignee: "Meera", status: "In Progress", priority: "Medium", type: "Story", labels: [], customer: "Architecture", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-251" },
-    { key: "ARCH-252", summary: "Review API naming standards", assignee: "Dev", status: "Open", priority: "Low", type: "Story", labels: [], customer: "Architecture", updated: "2026-06-19", url: "https://wdtablesystems.atlassian.net/browse/ARCH-252" }
+    { key: "ARCH-251", summary: "Document streaming failover pattern", assignee: "Meera", status: "In Progress", priority: "Medium", type: "Story", labels: [], customer: "Architecture", dueDate: "2026-07-05", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-251" },
+    { key: "ARCH-252", summary: "Review API naming standards", assignee: "Dev", status: "Open", priority: "Low", type: "Story", labels: [], customer: "Architecture", dueDate: "2026-07-10", updated: "2026-06-19", url: "https://wdtablesystems.atlassian.net/browse/ARCH-252" }
   ],
   architectureBugIssues: [
-    { key: "ARCH-260", summary: "Architecture board status mismatch", assignee: "Leela", status: "Open", priority: "High", type: "Bug", labels: [], customer: "Architecture", updated: "2026-06-23", url: "https://wdtablesystems.atlassian.net/browse/ARCH-260" },
-    { key: "ARCH-261", summary: "Reference diagram link missing", assignee: "Arjun", status: "In Progress", priority: "Medium", type: "Bug", labels: [], customer: "Architecture", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-261" }
+    { key: "ARCH-260", summary: "Architecture board status mismatch", assignee: "Leela", status: "Open", priority: "High", type: "Bug", labels: [], customer: "Architecture", parent: "ARCH-204", parentUrl: "https://wdtablesystems.atlassian.net/browse/ARCH-204", updated: "2026-06-23", url: "https://wdtablesystems.atlassian.net/browse/ARCH-260" },
+    { key: "ARCH-261", summary: "Reference diagram link missing", assignee: "Arjun", status: "In Progress", priority: "Medium", type: "Bug", labels: [], customer: "Architecture", parent: "ARCH-242", parentUrl: "https://wdtablesystems.atlassian.net/browse/ARCH-242", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-261" }
   ],
   issues: [
     { key: "SRE-101", team: "sre", type: "Incident", summary: "Reduce alert noise for payment gateway", status: "In Progress", priority: "High", owner: "Priya", due: "2026-06-28", progress: 64, updated: "2026-06-21" },
