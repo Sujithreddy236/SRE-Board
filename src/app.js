@@ -14,7 +14,7 @@
     priority: "All",
     assignee: "All",
     releaseType: "patch",
-    architectureProjectView: "active",
+    architectureDetailView: "active",
     selectedIssueKey: "",
     query: ""
   };
@@ -474,30 +474,47 @@
     const filter = source.jiraFilters.architecture;
     const activeProjects = architectureIssues.filter(isActiveArchitectureProject);
     const inactiveProjects = architectureIssues.filter(isInactiveArchitectureProject);
-    const visibleProjects = state.architectureProjectView === "inactive" ? inactiveProjects : activeProjects;
-    const detailTitle = state.architectureProjectView === "inactive" ? "Inactive Projects" : "Active Projects";
 
     return `
-      <section class="metrics-grid architecture-metrics" aria-label="Architecture project metrics">
-        ${architectureProjectCard("active", "Active Projects", metrics.activeProjects || 0)}
-        ${architectureProjectCard("inactive", "Inactive Projects", metrics.inactiveProjects || 0)}
+      <section class="architecture-card-grid" aria-label="Architecture metrics">
+        ${architectureDropdownCard({
+          view: "active",
+          label: "Active Projects",
+          value: metrics.activeProjects || 0,
+          content: renderArchitectureProjectDetails("Active Projects", activeProjects, filter)
+        })}
+        ${architectureDropdownCard({
+          view: "inactive",
+          label: "Inactive Projects",
+          value: metrics.inactiveProjects || 0,
+          content: renderArchitectureProjectDetails("Inactive Projects", inactiveProjects, filter)
+        })}
+        ${architectureDropdownCard({
+          view: "stories",
+          label: "Story Status",
+          value: metrics.totalStories || 0,
+          content: statusTablePanel("Story Status", metrics.storyStatusCounts || {}, metrics.totalStories || 0)
+        })}
+        ${architectureDropdownCard({
+          view: "bugs",
+          label: "Bug Status",
+          value: metrics.totalBugs || 0,
+          content: statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0)
+        })}
       </section>
-
-      <section class="architecture-status-grid">
-        ${statusTablePanel("Story Status", metrics.storyStatusCounts || {}, metrics.totalStories || 0)}
-        ${statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0)}
-      </section>
-
-      ${renderArchitectureProjectDetails(detailTitle, visibleProjects, filter)}
     `;
   }
 
-  function architectureProjectCard(view, label, value) {
+  function architectureDropdownCard({ view, label, value, content }) {
+    const active = state.architectureDetailView === view;
     return `
-      <button class="metric-card architecture-project-card ${state.architectureProjectView === view ? "active" : ""}" data-architecture-project-view="${view}">
-        <span>${label}</span>
-        <strong>${value}</strong>
-      </button>
+      <div class="architecture-dropdown-card">
+        <button class="metric-card architecture-summary-card ${active ? "active" : ""}" data-architecture-detail-view="${view}">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </button>
+        ${active ? `<div class="architecture-dropdown">${content}</div>` : ""}
+      </div>
     `;
   }
 
@@ -531,7 +548,7 @@
 
   function renderArchitectureProjectDetails(title, issues, filter) {
     return `
-      <section class="work-area">
+      <section class="work-area architecture-detail-area">
         <div class="jira-strip">
           <div>
             <strong>${title}</strong>
@@ -876,7 +893,7 @@
         state.priority = "All";
         state.assignee = "All";
         state.releaseType = "patch";
-        state.architectureProjectView = "active";
+        state.architectureDetailView = "active";
         state.selectedIssueKey = "";
         state.query = "";
         render();
@@ -908,9 +925,9 @@
       });
     });
 
-    document.querySelectorAll("[data-architecture-project-view]").forEach((button) => {
+    document.querySelectorAll("[data-architecture-detail-view]").forEach((button) => {
       button.addEventListener("click", () => {
-        state.architectureProjectView = button.dataset.architectureProjectView;
+        state.architectureDetailView = button.dataset.architectureDetailView;
         render();
       });
     });
@@ -1022,9 +1039,7 @@
 
   function exportJson() {
     const team = getTeam();
-    const exportIssues = team.id === "architecture"
-      ? (source.architectureIssues || []).filter(state.architectureProjectView === "inactive" ? isInactiveArchitectureProject : isActiveArchitectureProject)
-      : getFilteredIssues();
+    const exportIssues = team.id === "architecture" ? getArchitectureExportIssues() : getFilteredIssues();
     const payload = {
       team: team.name,
       exportedAt: new Date().toISOString(),
@@ -1037,6 +1052,15 @@
     link.download = `${team.id}-dashboard.json`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  function getArchitectureExportIssues() {
+    if (state.architectureDetailView === "inactive") {
+      return (source.architectureIssues || []).filter(isInactiveArchitectureProject);
+    }
+    if (state.architectureDetailView === "stories") return source.architectureStoryIssues || [];
+    if (state.architectureDetailView === "bugs") return source.architectureBugIssues || [];
+    return (source.architectureIssues || []).filter(isActiveArchitectureProject);
   }
 
   function slug(value) {

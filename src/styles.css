@@ -272,10 +272,6 @@ button.metric-card {
   margin-bottom: 16px;
 }
 
-.architecture-metrics {
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
-}
-
 .metric-card,
 .panel,
 .table-shell {
@@ -289,19 +285,76 @@ button.metric-card {
   padding: 18px;
 }
 
-.architecture-project-card {
+.architecture-card-grid {
+  align-items: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.architecture-dropdown-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.architecture-summary-card {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid var(--wdts-line);
 }
 
-.architecture-project-card:hover,
-.architecture-project-card.active {
+.architecture-summary-card:hover,
+.architecture-summary-card.active {
   border-color: var(--wdts-red);
   box-shadow: 0 16px 36px rgba(166, 25, 46, 0.14);
 }
 
-.architecture-project-card.active {
+.architecture-summary-card.active {
   background: #fff7f8;
+}
+
+.architecture-dropdown {
+  animation: dropdownIn 150ms ease-out;
+}
+
+.architecture-dropdown .panel,
+.architecture-dropdown .table-shell,
+.architecture-dropdown .jira-strip {
+  box-shadow: 0 10px 24px rgba(23, 23, 23, 0.06);
+}
+
+.architecture-dropdown .panel {
+  min-height: 0;
+}
+
+.architecture-detail-area {
+  gap: 8px;
+}
+
+.architecture-dropdown table {
+  min-width: 0;
+}
+
+.architecture-dropdown th,
+.architecture-dropdown td {
+  padding: 11px 12px;
+  white-space: normal;
+}
+
+.architecture-dropdown td:nth-child(2) {
+  min-width: 180px;
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .metric-card span {
@@ -328,13 +381,6 @@ button.metric-card {
   display: grid;
   gap: 14px;
   grid-template-columns: 1.35fr 1fr;
-  margin-bottom: 16px;
-}
-
-.architecture-status-grid {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 16px;
 }
 
@@ -908,7 +954,7 @@ td:nth-child(2) {
 
   .metrics-grid,
   .insights,
-  .architecture-status-grid {
+  .architecture-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -947,7 +993,7 @@ td:nth-child(2) {
 
   .metrics-grid,
   .insights,
-  .architecture-status-grid,
+  .architecture-card-grid,
   .filters,
   .release-form,
   .team-nav {
