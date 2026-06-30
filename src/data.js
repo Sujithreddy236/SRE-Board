@@ -69,6 +69,12 @@ window.SRE_BOARD_DATA = {
       inProgressJql: "filter = 52237 AND status = \"L3 in progress\" ORDER BY updated DESC",
       sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=52237"
     },
+    architecture: {
+      cloudUrl: "https://wdtablesystems.atlassian.net",
+      filterId: "59446",
+      jql: "filter = 59446 ORDER BY updated DESC",
+      sourceUrl: "https://wdtablesystems.atlassian.net/issues/?filter=59446"
+    },
     sreReleases: [
       {
         name: "2.6.4.2.21_1",
@@ -105,6 +111,16 @@ window.SRE_BOARD_DATA = {
       { author: "Amol Bhaskar Gite", created: "2026-06-22 14:16", body: "Hi @Luis Abuan, can you please confirm if the below Chip IDs are part of Chip Cache and correspond to a valid chipset label?" },
       { author: "Luis Abuan", created: "2026-06-22 11:54", body: "Hi @Sharad Goel, please kindly help to assign resources to check on this. Thanks." }
     ] }
+  ],
+  architectureIssues: [
+    { key: "ARCH-204", summary: "Event streaming reference architecture", assignee: "Meera", status: "In Progress", priority: "High", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-21", url: "https://wdtablesystems.atlassian.net/browse/ARCH-204" },
+    { key: "ARCH-219", summary: "API governance checklist", assignee: "Dev", status: "Open", priority: "Medium", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-17", url: "https://wdtablesystems.atlassian.net/browse/ARCH-219" },
+    { key: "ARCH-226", summary: "Legacy auth migration dependency", assignee: "Leela", status: "Canceled", priority: "High", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-20", url: "https://wdtablesystems.atlassian.net/browse/ARCH-226" },
+    { key: "ARCH-242", summary: "Data retention standards", assignee: "Arjun", status: "Released", priority: "Medium", type: "Epic", labels: [], customer: "Architecture", updated: "2026-06-14", url: "https://wdtablesystems.atlassian.net/browse/ARCH-242" },
+    { key: "ARCH-251", summary: "Document streaming failover pattern", assignee: "Meera", status: "In Progress", priority: "Medium", type: "Story", labels: [], customer: "Architecture", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-251" },
+    { key: "ARCH-252", summary: "Review API naming standards", assignee: "Dev", status: "Open", priority: "Low", type: "Story", labels: [], customer: "Architecture", updated: "2026-06-19", url: "https://wdtablesystems.atlassian.net/browse/ARCH-252" },
+    { key: "ARCH-260", summary: "Architecture board status mismatch", assignee: "Leela", status: "Open", priority: "High", type: "Bug", labels: [], customer: "Architecture", updated: "2026-06-23", url: "https://wdtablesystems.atlassian.net/browse/ARCH-260" },
+    { key: "ARCH-261", summary: "Reference diagram link missing", assignee: "Arjun", status: "In Progress", priority: "Medium", type: "Bug", labels: [], customer: "Architecture", updated: "2026-06-22", url: "https://wdtablesystems.atlassian.net/browse/ARCH-261" }
   ],
   issues: [
     { key: "SRE-101", team: "sre", type: "Incident", summary: "Reduce alert noise for payment gateway", status: "In Progress", priority: "High", owner: "Priya", due: "2026-06-28", progress: 64, updated: "2026-06-21" },

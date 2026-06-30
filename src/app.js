@@ -36,6 +36,7 @@
     if (!payload || !Array.isArray(payload.sreFilterIssues)) return;
     source.sreFilterIssues = payload.sreFilterIssues;
     source.sreL3Issues = payload.sreL3Issues || payload.sreFilterIssues.filter((issue) => issue.status === "L3 in progress");
+    source.architectureIssues = payload.architectureIssues || source.architectureIssues || [];
     source.releases = mergeReleases(payload.releases || [], getStoredReleases());
     source.jiraFilters = { ...source.jiraFilters, ...payload.jiraFilters };
     const sreTeam = source.teams.find((team) => team.id === "sre");
@@ -52,6 +53,13 @@
         statusCounts: payload.metrics.statusCounts,
         priorityCounts: payload.metrics.priorityCounts,
         total: payload.metrics.total
+      };
+    }
+    const architectureTeam = source.teams.find((team) => team.id === "architecture");
+    if (architectureTeam && payload.architectureMetrics) {
+      architectureTeam.metrics = {
+        ...architectureTeam.metrics,
+        ...payload.architectureMetrics
       };
     }
   }
@@ -80,7 +88,7 @@
         mode: "live",
         message: "Live Jira data",
         fetchedAt: payload.fetchedAt || new Date().toISOString(),
-        details: "Overview, In Progress, and Releases synced from Jira"
+        details: "SRE, Architecture, and Releases synced from Jira"
       };
     } catch (error) {
       const missingToken = error.payload?.requiredEnv?.includes("JIRA_API_TOKEN");
@@ -127,6 +135,20 @@
       return source.sreL3Issues || source.sreFilterIssues.filter((issue) => issue.status === "L3 in progress");
     }
     return source.sreFilterIssues;
+  }
+
+  function getArchitectureIssues() {
+    return (source.architectureIssues || [])
+      .filter((issue) => state.status === "All" || issue.status === state.status)
+      .filter((issue) => state.priority === "All" || issue.priority === state.priority)
+      .filter((issue) => {
+        const query = state.query.trim().toLowerCase();
+        if (!query) return true;
+        return [issue.key, issue.summary, issue.assignee, issue.type, issue.status, issue.priority]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      });
   }
 
   function getAssignees(items) {
@@ -236,6 +258,37 @@
     };
   }
 
+  function snapshotArchitectureMetrics() {
+    const issues = source.architectureIssues || [];
+    const inactiveStatuses = new Set(["open", "to do", "canceled", "cancelled"]);
+    const excludedActiveStatuses = new Set(["open", "to do", "released", "canceled", "cancelled", "deferred"]);
+    const epics = issues.filter((issue) => issueTypeIs(issue, "Epic"));
+    const stories = issues.filter((issue) => issueTypeIs(issue, "Story"));
+    const bugs = issues.filter((issue) => issueTypeIs(issue, "Bug"));
+    return {
+      activeProjects: epics.filter((issue) => !excludedActiveStatuses.has(String(issue.status || "").toLowerCase())).length,
+      inactiveProjects: epics.filter((issue) => inactiveStatuses.has(String(issue.status || "").toLowerCase())).length,
+      totalProjects: epics.length,
+      storyStatusCounts: countStatuses(stories),
+      bugStatusCounts: countStatuses(bugs),
+      totalStories: stories.length,
+      totalBugs: bugs.length,
+      total: issues.length
+    };
+  }
+
+  function issueTypeIs(issue, expected) {
+    return String(issue.type || "").toLowerCase() === expected.toLowerCase();
+  }
+
+  function countStatuses(issues) {
+    return issues.reduce((counts, issue) => {
+      const status = issue.status || "Unknown";
+      counts[status] = (counts[status] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
   function getPriorityCounts(team, fallbackIssues) {
     const counts = team.metrics?.priorityCounts;
     if (counts) {
@@ -266,6 +319,9 @@
     if (team.id === "sre" && liveStatus.mode !== "live") {
       team.metrics = { ...team.metrics, ...snapshotSreMetrics() };
     }
+    if (team.id === "architecture" && liveStatus.mode !== "live") {
+      team.metrics = { ...team.metrics, ...snapshotArchitectureMetrics() };
+    }
     const allTeamIssues = source.issues.filter((issue) => issue.team === team.id);
     const issues = getFilteredIssues();
     const sreTabSource = getSreTabSource();
@@ -276,50 +332,9 @@
     const priorityCounts = team.id === "sre" ? getPriorityCounts(team, allTeamIssues) : groupCount(allTeamIssues, "priority", priorityOrder);
     const totalIssues = team.id === "sre" ? metricValue(team, "total", source.sreFilterIssues.length) : allTeamIssues.length;
     const rate = team.id === "sre" ? metricValue(team, "progress", completionRate(allTeamIssues)) : completionRate(allTeamIssues);
-
-    app.innerHTML = `
-      <div class="shell" style="--accent: ${team.accent}">
-        <aside class="sidebar">
-          <div class="brand">
-            <div class="brand-mark">
-              <img src="https://wdtablesystems.com/wp-content/uploads/2024/09/logo-wdts.jpg" alt="WDTS" />
-            </div>
-            <div>
-              <h1>Operations Dashboard</h1>
-              <p>Walker Digital Table Systems</p>
-            </div>
-          </div>
-          <nav class="team-nav" aria-label="Teams">
-            ${source.teams.map((item) => `
-              <button class="team-button ${item.id === team.id ? "active" : ""}" data-team="${item.id}">
-                <span class="team-dot" style="background:${item.accent}"></span>
-                <span>${item.name}</span>
-              </button>
-            `).join("")}
-          </nav>
-          <div class="sync-panel">
-            <span class="sync-indicator sync-${liveStatus.mode}"></span>
-            <div>
-              <strong>Jira Sync</strong>
-              <p>${escapeHtml(liveStatus.message)}</p>
-              ${liveStatus.details ? `<p>${escapeHtml(liveStatus.details)}</p>` : ""}
-            </div>
-          </div>
-        </aside>
-
-        <main class="main">
-          <header class="topbar">
-            <div>
-              <p class="eyebrow">${team.jiraProject} workspace</p>
-              <h2>${team.name}</h2>
-              <p class="focus">${team.focus}</p>
-            </div>
-            <div class="top-actions">
-              <button class="icon-button" id="refreshButton" title="Refresh">Refresh</button>
-              <button class="primary-button" id="exportButton">Export JSON</button>
-            </div>
-          </header>
-
+    const dashboardContent = team.id === "architecture"
+      ? renderArchitectureDashboard(team)
+      : `
           <section class="metrics-grid" aria-label="Summary metrics">
             ${metricCard("Open", metricValue(team, "open", 0), "Backlog load")}
             ${metricCard("In Progress", metricValue(team, "inProgress", 0), "Active execution")}
@@ -385,11 +400,178 @@
             </div>
           </section>
           `}
+        `;
+
+    app.innerHTML = `
+      <div class="shell" style="--accent: ${team.accent}">
+        <aside class="sidebar">
+          <div class="brand">
+            <div class="brand-mark">
+              <img src="https://wdtablesystems.com/wp-content/uploads/2024/09/logo-wdts.jpg" alt="WDTS" />
+            </div>
+            <div>
+              <h1>Operations Dashboard</h1>
+              <p>Walker Digital Table Systems</p>
+            </div>
+          </div>
+          <nav class="team-nav" aria-label="Teams">
+            ${source.teams.map((item) => `
+              <button class="team-button ${item.id === team.id ? "active" : ""}" data-team="${item.id}">
+                <span class="team-dot" style="background:${item.accent}"></span>
+                <span>${item.name}</span>
+              </button>
+            `).join("")}
+          </nav>
+          <div class="sync-panel">
+            <span class="sync-indicator sync-${liveStatus.mode}"></span>
+            <div>
+              <strong>Jira Sync</strong>
+              <p>${escapeHtml(liveStatus.message)}</p>
+              ${liveStatus.details ? `<p>${escapeHtml(liveStatus.details)}</p>` : ""}
+            </div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">${team.jiraProject} workspace</p>
+              <h2>${team.name}</h2>
+              <p class="focus">${team.focus}</p>
+            </div>
+            <div class="top-actions">
+              <button class="icon-button" id="refreshButton" title="Refresh">Refresh</button>
+              <button class="primary-button" id="exportButton">Export JSON</button>
+            </div>
+          </header>
+
+          ${dashboardContent}
         </main>
       </div>
     `;
 
     bindEvents();
+  }
+
+  function renderArchitectureDashboard(team) {
+    const metrics = team.metrics || snapshotArchitectureMetrics();
+    const architectureIssues = source.architectureIssues || [];
+    const filteredIssues = getArchitectureIssues();
+    const searchActive = state.tab === "search";
+    const filter = source.jiraFilters.architecture;
+
+    return `
+      <section class="metrics-grid architecture-metrics" aria-label="Architecture project metrics">
+        ${metricCard("Active Projects", metrics.activeProjects || 0, "Epic status not Open, To Do, Released, Canceled, or Deferred")}
+        ${metricCard("Inactive Projects", metrics.inactiveProjects || 0, "Epic status Open, To Do, or Canceled")}
+      </section>
+
+      <section class="architecture-status-grid">
+        ${statusTablePanel("Story Status", metrics.storyStatusCounts || {}, metrics.totalStories || 0)}
+        ${statusTablePanel("Bug Status", metrics.bugStatusCounts || {}, metrics.totalBugs || 0)}
+      </section>
+
+      <div class="tabs" role="tablist" aria-label="Architecture dashboard tabs">
+        <button class="tab-button ${!searchActive ? "active" : ""}" data-tab="overview" role="tab">
+          Overview
+        </button>
+        <button class="tab-button ${searchActive ? "active" : ""}" data-tab="search" role="tab">
+          Search <span>${architectureIssues.length}</span>
+        </button>
+      </div>
+
+      ${searchActive ? renderArchitectureSearch(filteredIssues, architectureIssues, filter) : ""}
+    `;
+  }
+
+  function statusTablePanel(title, counts, total) {
+    const rows = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
+    return `
+      <div class="panel status-table-panel">
+        <div class="panel-heading">
+          <h3>${title}</h3>
+          <span>${total} total</span>
+        </div>
+        <table class="status-count-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(([status, count]) => `
+              <tr>
+                <td>${escapeHtml(status)}</td>
+                <td><strong>${count}</strong></td>
+              </tr>
+            `).join("") || `<tr><td colspan="2" class="empty">No issues found</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function renderArchitectureSearch(issues, allIssues, filter) {
+    const statuses = uniqueValues(allIssues, "status");
+    const priorities = uniqueValues(allIssues, "priority");
+    return `
+      <section class="work-area">
+        <div class="jira-strip">
+          <div>
+            <strong>Architecture filter ${filter.filterId}</strong>
+            <p>${filter.jql}</p>
+          </div>
+          <a href="${filter.sourceUrl}" target="_blank" rel="noreferrer">Open in Jira</a>
+        </div>
+        <div class="filters">
+          <label>
+            <span>Search</span>
+            <input id="searchInput" value="${escapeHtml(state.query)}" placeholder="Jira Id, assignee, type" />
+          </label>
+          ${selectControl("statusFilter", "Status", ["All", ...statuses], state.status)}
+          ${selectControl("priorityFilter", "Priority", ["All", ...priorities], state.priority)}
+        </div>
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th>Jira Id</th>
+                <th>Summary</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Assignee</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${issues.map(architectureIssueRow).join("") || `<tr><td colspan="7" class="empty">No matching Jira issues</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function architectureIssueRow(issue) {
+    return `
+      <tr>
+        <td>
+          <a class="jira-link" href="${issue.url}" target="_blank" rel="noreferrer">${escapeHtml(issue.key)}</a>
+        </td>
+        <td>${escapeHtml(issue.summary)}</td>
+        <td>${escapeHtml(issue.type)}</td>
+        <td><span class="pill status-${slug(issue.status)}">${escapeHtml(issue.status)}</span></td>
+        <td>${escapeHtml(issue.priority)}</td>
+        <td>${escapeHtml(issue.assignee)}</td>
+        <td>${formatUpdatedDate(issue.updated)}</td>
+      </tr>
+    `;
+  }
+
+  function uniqueValues(items, field) {
+    return [...new Set(items.map((item) => item[field]).filter(Boolean))].sort();
   }
 
   function metricCard(label, value, caption) {
@@ -533,6 +715,13 @@
   function formatReleaseDate(value) {
     if (!value) return "";
     const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return escapeHtml(value);
+    return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function formatUpdatedDate(value) {
+    if (!value) return "";
+    const date = new Date(value);
     if (Number.isNaN(date.getTime())) return escapeHtml(value);
     return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   }
@@ -822,10 +1011,11 @@
 
   function exportJson() {
     const team = getTeam();
+    const exportIssues = team.id === "architecture" ? getArchitectureIssues() : getFilteredIssues();
     const payload = {
       team: team.name,
       exportedAt: new Date().toISOString(),
-      issues: getFilteredIssues()
+      issues: exportIssues
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);

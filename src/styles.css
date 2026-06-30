@@ -267,6 +267,10 @@ button {
   margin-bottom: 16px;
 }
 
+.architecture-metrics {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
 .metric-card,
 .panel,
 .table-shell {
@@ -304,6 +308,13 @@ button {
   display: grid;
   gap: 14px;
   grid-template-columns: 1.35fr 1fr;
+  margin-bottom: 16px;
+}
+
+.architecture-status-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 16px;
 }
 
@@ -665,6 +676,21 @@ table {
   width: 100%;
 }
 
+.status-count-table {
+  min-width: 0;
+}
+
+.status-count-table th,
+.status-count-table td {
+  white-space: normal;
+}
+
+.status-count-table td:last-child,
+.status-count-table th:last-child {
+  text-align: right;
+  width: 120px;
+}
+
 .sre-progress-table {
   min-width: 760px;
 }
@@ -861,7 +887,8 @@ td:nth-child(2) {
   }
 
   .metrics-grid,
-  .insights {
+  .insights,
+  .architecture-status-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -900,6 +927,7 @@ td:nth-child(2) {
 
   .metrics-grid,
   .insights,
+  .architecture-status-grid,
   .filters,
   .release-form,
   .team-nav {

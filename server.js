@@ -8,6 +8,7 @@ loadEnv(path.join(root, ".env"));
 const port = Number(process.env.PORT || 4173);
 const jiraBaseUrl = process.env.JIRA_BASE_URL || "https://wdtablesystems.atlassian.net";
 const jiraFilterId = process.env.JIRA_FILTER_ID || "52237";
+const architectureFilterId = process.env.ARCHITECTURE_FILTER_ID || "59446";
 const jiraEmail = process.env.JIRA_EMAIL;
 const jiraToken = process.env.JIRA_API_TOKEN;
 const releaseFilters = [
@@ -66,7 +67,7 @@ async function jiraSearch(jql) {
   const body = {
     jql,
     maxResults: 100,
-    fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment"]
+    fields: ["summary", "assignee", "status", "statusCategory", "priority", "labels", "updated", "comment", "issuetype"]
   };
   const response = await fetch(url, {
     method: "POST",
@@ -187,6 +188,7 @@ function mapIssue(issue) {
     status: fields.status?.name || "Unknown",
     statusCategory: fields.status?.statusCategory?.name || fields.statusCategory?.name || "Unknown",
     priority: fields.priority?.name || "Unspecified",
+    type: fields.issuetype?.name || "Issue",
     labels: fields.labels || [],
     customer: customerFromSummary(fields.summary),
     updated: fields.updated || "",
@@ -207,6 +209,40 @@ function formatDate(value) {
     minute: "2-digit",
     hour12: false
   });
+}
+
+function typeIs(issue, expected) {
+  return String(issue.type || "").toLowerCase() === expected.toLowerCase();
+}
+
+function countByStatus(issues) {
+  return issues.reduce((counts, issue) => {
+    const status = issue.status || "Unknown";
+    counts[status] = (counts[status] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function computeArchitectureMetrics(issues) {
+  const inactiveStatuses = new Set(["open", "to do", "canceled", "cancelled"]);
+  const excludedActiveStatuses = new Set(["open", "to do", "released", "canceled", "cancelled", "deferred"]);
+  const epics = issues.filter((issue) => typeIs(issue, "Epic"));
+  const stories = issues.filter((issue) => typeIs(issue, "Story"));
+  const bugs = issues.filter((issue) => typeIs(issue, "Bug"));
+
+  const activeProjects = epics.filter((issue) => !excludedActiveStatuses.has(String(issue.status || "").toLowerCase())).length;
+  const inactiveProjects = epics.filter((issue) => inactiveStatuses.has(String(issue.status || "").toLowerCase())).length;
+
+  return {
+    activeProjects,
+    inactiveProjects,
+    totalProjects: epics.length,
+    storyStatusCounts: countByStatus(stories),
+    bugStatusCounts: countByStatus(bugs),
+    totalStories: stories.length,
+    totalBugs: bugs.length,
+    total: issues.length
+  };
 }
 
 function statusBucket(issue) {
@@ -269,6 +305,7 @@ function priorityBucket(issue) {
 function configuredJiraSyncs() {
   const allJql = `filter = ${jiraFilterId} ORDER BY updated DESC`;
   const l3Jql = `filter = ${jiraFilterId} AND status = "L3 in progress" ORDER BY updated DESC`;
+  const architectureJql = `filter = ${architectureFilterId} ORDER BY updated DESC`;
   return {
     overview: {
       filterId: jiraFilterId,
@@ -279,6 +316,11 @@ function configuredJiraSyncs() {
       filterId: jiraFilterId,
       jql: l3Jql,
       sourceUrl: `${jiraBaseUrl}/issues/?filter=${jiraFilterId}`
+    },
+    architecture: {
+      filterId: architectureFilterId,
+      jql: architectureJql,
+      sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureFilterId}`
     },
     releases: releaseFilters.map((release) => ({
       ...release,
@@ -302,13 +344,16 @@ async function handleSreApi(res) {
   const syncs = configuredJiraSyncs();
   const allJql = syncs.overview.jql;
   const l3Jql = syncs.inProgress.jql;
-  const [allResult, l3Result, releases] = await Promise.all([
+  const architectureJql = syncs.architecture.jql;
+  const [allResult, l3Result, architectureResult, releases] = await Promise.all([
     jiraSearch(allJql),
     jiraSearch(l3Jql),
+    jiraSearch(architectureJql),
     Promise.all(releaseFilters.map(fetchRelease))
   ]);
   const issues = (allResult.issues || []).map(mapIssue);
   const l3Issues = (l3Result.issues || []).map(mapIssue);
+  const architectureIssues = (architectureResult.issues || []).map(mapIssue);
 
   send(res, 200, JSON.stringify({
     fetchedAt: new Date().toISOString(),
@@ -322,6 +367,12 @@ async function handleSreApi(res) {
         inProgressJql: l3Jql,
         sourceUrl: `${jiraBaseUrl}/issues/?filter=${jiraFilterId}`
       },
+      architecture: {
+        cloudUrl: jiraBaseUrl,
+        filterId: architectureFilterId,
+        jql: architectureJql,
+        sourceUrl: `${jiraBaseUrl}/issues/?filter=${architectureFilterId}`
+      },
       sreReleases: releaseFilters.map((release) => ({
         ...release,
         jql: `filter = ${release.filterId} ORDER BY updated DESC`,
@@ -329,8 +380,10 @@ async function handleSreApi(res) {
       }))
     },
     metrics: computeMetrics(issues),
+    architectureMetrics: computeArchitectureMetrics(architectureIssues),
     sreFilterIssues: issues,
     sreL3Issues: l3Issues,
+    architectureIssues,
     releases
   }));
 }

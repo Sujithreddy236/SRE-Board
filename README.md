@@ -37,6 +37,7 @@ The dashboard calls `/api/sre` for live Jira data on every page load, manual ref
 - Live Jira ingestion through `server.js`
 - Fresh Jira sync for every configured JQL filter on page load, manual refresh, and every 20 minutes
 - SRE `Overview` and `In Progress` tabs sourced from Jira filter `52237`
+- Architecture workspace sourced from Jira filter `59446`
 - SRE `Releases` tab sourced from configured release Jira filters, grouped by Patch and Hotfix
 - SRE summary cards show only Open and In Progress
 - Priority uses Jira-derived Top3, P2, P3, and P4 buckets. Top3 is based on the Jira issue label `Top3`.
@@ -106,3 +107,18 @@ The `Hotfix` tab is ready for hotfix release filters when they are provided.
 The live API fetches each configured release filter and displays the total Jira ticket count for that release.
 New releases can also be added from the dashboard form by entering release name, build version, type, Jira filter ID or Jira filter link, and release date. Browser-added releases are saved locally and merged into the Releases tab on refresh.
 Browser-added releases can be removed from the Releases table with the `Delete` action. Built-in releases remain read-only.
+
+## Architecture Jira Board
+
+The Architecture workspace uses:
+
+```jql
+filter = 59446 ORDER BY updated DESC
+```
+
+Project cards are counted from Jira Epics:
+
+- Active Projects: Epic status is not `Open`, `To Do`, `Released`, `Canceled`, or `Deferred`
+- Inactive Projects: Epic status is `Open`, `To Do`, or `Canceled`
+
+The board also shows Story and Bug status-count tables when those issue types are returned by the filter. The `Search` tab keeps a searchable Jira issue table for the same filter.
