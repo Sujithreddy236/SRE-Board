@@ -17,6 +17,7 @@
     architectureDetailView: "",
     architectureStatusType: "",
     architectureStatus: "",
+    architectureAssignee: "",
     selectedIssueKey: "",
     query: ""
   };
@@ -585,24 +586,45 @@
   function renderArchitectureStatusDetails(type, status, issues) {
     const visibleIssues = issues.filter((issue) => sameStatus(issue.status, status));
     const isBug = type === "bugs";
+    const assignees = getStatusAssignees(visibleIssues);
+    const selectedIssues = state.architectureAssignee
+      ? visibleIssues.filter((issue) => issue.assignee === state.architectureAssignee)
+      : [];
     return `
       <div class="status-detail-table">
-        <div class="status-detail-heading">${escapeHtml(status)} tickets</div>
-        <div class="table-shell">
-          <table class="${isBug ? "architecture-bug-table" : "architecture-story-table"}">
-            <thead>
-              <tr>
-                <th>Jira Id</th>
-                <th>Summary</th>
-                <th>Assignee</th>
-                <th>${isBug ? "Parent" : "Due Date"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${visibleIssues.map((issue) => isBug ? architectureBugRow(issue) : architectureStoryRow(issue)).join("") || `<tr><td colspan="4" class="empty">No matching tickets</td></tr>`}
-            </tbody>
-          </table>
+        <div class="status-detail-heading">${escapeHtml(status)} assignees</div>
+        <div class="architecture-assignee-strip">
+          ${assignees.map((assignee) => `
+            <button class="assignee-chip ${state.architectureAssignee === assignee ? "active" : ""}" data-architecture-assignee="${escapeHtml(assignee)}">
+              ${escapeHtml(assignee)} <span>${visibleIssues.filter((issue) => issue.assignee === assignee).length}</span>
+            </button>
+          `).join("") || `<span class="empty-inline">No assignees found</span>`}
         </div>
+        ${state.architectureAssignee ? renderArchitectureAssigneeTickets(type, selectedIssues, isBug) : ""}
+      </div>
+    `;
+  }
+
+  function getStatusAssignees(issues) {
+    return [...new Set(issues.map((issue) => issue.assignee || "Unassigned"))].sort((a, b) => a.localeCompare(b));
+  }
+
+  function renderArchitectureAssigneeTickets(type, issues, isBug) {
+    return `
+      <div class="table-shell">
+        <table class="${isBug ? "architecture-bug-table" : "architecture-story-table"}">
+          <thead>
+            <tr>
+              <th>Jira Id</th>
+              <th>Summary</th>
+              <th>Assignee</th>
+              <th>${isBug ? "Parent" : "Due Date"}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${issues.map((issue) => isBug ? architectureBugRow(issue) : architectureStoryRow(issue)).join("") || `<tr><td colspan="4" class="empty">No matching tickets</td></tr>`}
+          </tbody>
+        </table>
       </div>
     `;
   }
@@ -992,6 +1014,7 @@
         state.architectureDetailView = "";
         state.architectureStatusType = "";
         state.architectureStatus = "";
+        state.architectureAssignee = "";
         state.selectedIssueKey = "";
         state.query = "";
         render();
@@ -1030,6 +1053,7 @@
           : button.dataset.architectureDetailView;
         state.architectureStatusType = "";
         state.architectureStatus = "";
+        state.architectureAssignee = "";
         render();
       });
     });
@@ -1041,6 +1065,15 @@
         const alreadySelected = state.architectureStatusType === type && sameStatus(state.architectureStatus, status);
         state.architectureStatusType = alreadySelected ? "" : type;
         state.architectureStatus = alreadySelected ? "" : status;
+        state.architectureAssignee = "";
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-architecture-assignee]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const assignee = button.dataset.architectureAssignee;
+        state.architectureAssignee = state.architectureAssignee === assignee ? "" : assignee;
         render();
       });
     });

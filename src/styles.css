@@ -367,6 +367,18 @@ button.metric-card {
   font-weight: 800;
 }
 
+.architecture-assignee-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty-inline {
+  color: #6b6561;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .architecture-story-table,
 .architecture-bug-table {
   min-width: 760px;
